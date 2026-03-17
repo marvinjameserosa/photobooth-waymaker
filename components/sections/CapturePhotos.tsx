@@ -11,8 +11,8 @@ import BokehBackground from "@/components/ui/BokehBackground";
 import ARCanvas from "@/components/ar/ARCanvas";
 import { useFaceMesh } from "@/lib/ar/hooks/useFaceMesh";
 import { useARState } from "@/lib/ar/hooks/useARState";
+import { useARProps } from "@/lib/ar/hooks/useARProps";
 import { getActiveStationConfig } from "@/lib/layoutMode";
-import { AR_PROPS } from "@/public/ar-props";
 
 function StationBadge({ children }: { children: React.ReactNode }) {
   return (
@@ -57,6 +57,7 @@ function CameraCapture({
   const [error, setError] = useState<string | null>(null);
   const [countdown, setCountdown] = useState<number | null>(null);
   const [showARMenu, setShowARMenu] = useState(false);
+  const arProps = useARProps();
 
   // AR State
   const {
@@ -336,7 +337,7 @@ function CameraCapture({
                     </button>
 
                     {/* Props */}
-                    {AR_PROPS.map((prop) => (
+                    {arProps.map((prop) => (
                       <button
                         key={prop.id}
                         onClick={() => {
@@ -352,6 +353,7 @@ function CameraCapture({
                         title={prop.name}
                       >
                         {prop.category === "sunglasses" && "🕶️"}
+                        {prop.category === "logos" && "🏷️"}
                         {prop.category === "hats" &&
                           prop.id === "robot-helmet" &&
                           "🤖"}

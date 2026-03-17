@@ -1,60 +1,58 @@
-import { DrawContext } from '@/lib/ar/types';
+import { DrawContext } from "@/lib/ar/types";
+import { drawImageProp } from "../utils/imageProp";
+
+const ARDUINO_CAP_IMAGE_SRC = "/ar-props/images/arduino-cap.png";
 
 /**
  * Draw "Arduino Day" text as a hat prop
  */
 export function drawArduinoCap(context: DrawContext) {
-    const { ctx, x, y, width, height, rotation, colors } = context;
+  const rendered = drawImageProp(context, {
+    src: ARDUINO_CAP_IMAGE_SRC,
+    maxWidthMultiplier: 1.7,
+    maxHeightMultiplier: 2.1,
+    offsetYMultiplier: 0.7,
+  });
 
-    ctx.save();
-    ctx.translate(x, y);
-    ctx.rotate(rotation);
+  if (rendered) {
+    return;
+  }
 
-    // Position adjustments
-    // Anchor 10 is top of forehead. 
-    // We want the text to sit ON TOP of this anchor.
-    // So we move UP (negative Y) by half the text block height + some padding.
-    const textBlockHeight = height * 0.8;
-    ctx.translate(0, -textBlockHeight * 0.8);
+  // Fallback while image is missing or loading.
+  const { ctx, x, y, width, height, rotation, colors } = context;
 
-    // Draw Settings
-    const textScale = width * 0.003; // Original scale for proper visibility
+  ctx.save();
+  ctx.translate(x, y);
+  ctx.rotate(rotation);
 
-    // Draw "ARDUINO"
-    ctx.save();
-    ctx.font = `900 ${100 * textScale}px "Inter", "Arial", sans-serif`;
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
+  const textBlockHeight = height * 0.8;
+  ctx.translate(0, -textBlockHeight * 0.8);
 
-    // Text Shadow/Outline for visibility
-    ctx.lineWidth = 15 * textScale;
-    ctx.strokeStyle = 'white';
-    ctx.lineJoin = 'round';
-    ctx.strokeText('ARDUINO', 0, -30 * textScale);
+  const textScale = width * 0.003;
 
-    // Main Text Color
-    ctx.fillStyle = colors.primary; // Teal
-    ctx.fillText('ARDUINO', 0, -30 * textScale);
-    ctx.restore();
+  ctx.save();
+  ctx.font = `900 ${100 * textScale}px "Inter", "Arial", sans-serif`;
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+  ctx.lineWidth = 15 * textScale;
+  ctx.strokeStyle = "white";
+  ctx.lineJoin = "round";
+  ctx.strokeText("ARDUINO", 0, -30 * textScale);
+  ctx.fillStyle = colors.primary;
+  ctx.fillText("ARDUINO", 0, -30 * textScale);
+  ctx.restore();
 
-    // Draw "DAY"
-    ctx.save();
-    ctx.font = `900 ${100 * textScale}px "Inter", "Arial", sans-serif`;
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
+  ctx.save();
+  ctx.font = `900 ${100 * textScale}px "Inter", "Arial", sans-serif`;
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+  ctx.lineWidth = 15 * textScale;
+  ctx.strokeStyle = "white";
+  ctx.lineJoin = "round";
+  ctx.strokeText("DAY", 0, 60 * textScale);
+  ctx.fillStyle = colors.secondary;
+  ctx.fillText("DAY", 0, 60 * textScale);
+  ctx.restore();
 
-    // Text Shadow/Outline
-    ctx.lineWidth = 15 * textScale;
-    ctx.strokeStyle = 'white';
-    ctx.lineJoin = 'round';
-    ctx.strokeText('DAY', 0, 60 * textScale);
-
-    // Main Text Color
-    ctx.fillStyle = colors.secondary; // Orange
-    ctx.fillText('DAY', 0, 60 * textScale);
-    ctx.restore();
-
-
-
-    ctx.restore();
+  ctx.restore();
 }
