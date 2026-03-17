@@ -26,6 +26,8 @@ const MAX_TRACKED_FACES = 10;
  */
 export async function loadFaceMeshModel(): Promise<FaceLandmarkerType> {
   if (faceLandmarker) {
+    // Re-apply options in case the singleton was created with older settings.
+    await faceLandmarker.setOptions({ numFaces: MAX_TRACKED_FACES });
     return faceLandmarker;
   }
 
