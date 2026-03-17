@@ -192,9 +192,9 @@ function CameraCaptureModal({
   }, [countdown, capturePhoto]);
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 p-4">
-      <div className="relative w-full max-w-3xl overflow-hidden rounded-2xl border border-[rgba(0,206,209,0.3)] bg-[rgba(13,27,42,0.95)]">
-        <div className="flex items-center justify-between border-b border-[rgba(0,206,209,0.2)] p-4">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 p-2 sm:p-4">
+      <div className="relative flex max-h-[calc(100dvh-1rem)] w-full max-w-3xl flex-col overflow-hidden rounded-2xl border border-[rgba(0,206,209,0.3)] bg-[rgba(13,27,42,0.95)] sm:max-h-[calc(100dvh-2rem)]">
+        <div className="flex items-center justify-between border-b border-[rgba(0,206,209,0.2)] px-4 py-3 sm:p-4">
           <h3 className="text-lg font-semibold text-white">Take Picture</h3>
           <button
             onClick={() => {
@@ -207,7 +207,7 @@ function CameraCaptureModal({
           </button>
         </div>
 
-        <div className="relative aspect-video bg-black">
+        <div className="relative min-h-[220px] flex-1 bg-black sm:aspect-video sm:min-h-0 sm:flex-none">
           {error ? (
             <div className="absolute inset-0 flex items-center justify-center p-4 text-center">
               <div>
@@ -234,7 +234,7 @@ function CameraCaptureModal({
 
               {countdown !== null && (
                 <div className="absolute inset-0 flex items-center justify-center bg-black/50">
-                  <span className="animate-pulse text-9xl font-bold text-[#00CED1]">
+                  <span className="animate-pulse text-6xl font-bold text-[#00CED1] sm:text-9xl">
                     {countdown}
                   </span>
                 </div>
@@ -243,11 +243,11 @@ function CameraCaptureModal({
           )}
         </div>
 
-        <div className="flex items-center justify-center gap-4 border-t border-[rgba(0,206,209,0.2)] bg-[rgba(13,27,42,0.5)] p-6">
+        <div className="flex w-full flex-col items-stretch justify-center gap-3 border-t border-[rgba(0,206,209,0.2)] bg-[rgba(13,27,42,0.5)] p-4 sm:flex-row sm:items-center sm:gap-4 sm:p-6">
           <button
             onClick={() => setCountdown(3)}
             disabled={!isStreaming || countdown !== null}
-            className="rounded-full bg-[#00CED1] px-8 py-3 font-medium text-white shadow-[0_0_20px_rgba(0,206,209,0.3)] transition hover:bg-[#00b8ba] disabled:cursor-not-allowed disabled:opacity-50"
+            className="w-full rounded-full bg-[#00CED1] px-4 py-3 text-sm font-medium text-white shadow-[0_0_20px_rgba(0,206,209,0.3)] transition hover:bg-[#00b8ba] disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto sm:px-8 sm:text-base"
           >
             {countdown !== null ? "Taking Photo..." : "Take Photo (3s timer)"}
           </button>
@@ -255,7 +255,7 @@ function CameraCaptureModal({
           <button
             onClick={capturePhoto}
             disabled={!isStreaming}
-            className="rounded-full bg-[#FF6B35] px-8 py-3 font-medium text-white transition hover:bg-[#e55a2b] disabled:cursor-not-allowed disabled:opacity-50"
+            className="w-full rounded-full bg-[#FF6B35] px-4 py-3 text-sm font-medium text-white transition hover:bg-[#e55a2b] disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto sm:px-8 sm:text-base"
           >
             Instant Capture
           </button>

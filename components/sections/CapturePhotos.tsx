@@ -222,10 +222,10 @@ function CameraCapture({
   };
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/90 flex items-center justify-center p-4">
-      <div className="relative w-full max-w-3xl bg-[rgba(13,27,42,0.95)] rounded-2xl overflow-hidden border border-[rgba(0,206,209,0.3)]">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 p-2 sm:p-4">
+      <div className="relative flex max-h-[calc(100dvh-1rem)] w-full max-w-3xl flex-col overflow-hidden rounded-2xl border border-[rgba(0,206,209,0.3)] bg-[rgba(13,27,42,0.95)] sm:max-h-[calc(100dvh-2rem)]">
         {/* Header */}
-        <div className="flex items-center justify-between p-4 border-b border-[rgba(0,206,209,0.2)]">
+        <div className="flex items-center justify-between border-b border-[rgba(0,206,209,0.2)] px-4 py-3 sm:p-4">
           <h3 className="text-lg font-semibold text-white">Camera Capture</h3>
           <button
             onClick={() => {
@@ -239,7 +239,7 @@ function CameraCapture({
         </div>
 
         {/* Video Preview */}
-        <div className="relative aspect-video bg-black">
+        <div className="relative min-h-[220px] flex-1 bg-black sm:aspect-video sm:min-h-0 sm:flex-none">
           {error ? (
             <div className="absolute inset-0 flex items-center justify-center text-center p-4">
               <div>
@@ -281,7 +281,7 @@ function CameraCapture({
 
               {/* AR Status Indicator */}
               {isAREnabled && (
-                <div className="absolute top-4 left-4 space-y-2">
+                <div className="absolute left-3 top-3 space-y-2 sm:left-4 sm:top-4">
                   {faceDetected && (
                     <div className="bg-green-500 text-white px-3 py-1 rounded-full text-xs font-bold flex items-center gap-2">
                       <span className="w-2 h-2 bg-white rounded-full animate-pulse"></span>
@@ -303,7 +303,20 @@ function CameraCapture({
 
               {/* AR Menu Dropdown - Repositioned to bottom right of video */}
               {showARMenu && (
-                <div className="absolute bottom-4 right-4 z-20 w-64 bg-[rgba(13,27,42,0.98)] border border-[rgba(0,206,209,0.3)] rounded-lg p-3 shadow-xl backdrop-blur-xl">
+                <button
+                  type="button"
+                  onClick={() => setShowARMenu(false)}
+                  className="absolute inset-0 z-10 flex items-start justify-center bg-black/35 pt-3 backdrop-blur-[1.5px] sm:hidden"
+                  aria-label="Close AR effects panel"
+                >
+                  <span className="rounded-full border border-[#00CED1]/60 bg-[rgba(13,27,42,0.85)] px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-[#00CED1]">
+                    AR Effects Open
+                  </span>
+                </button>
+              )}
+
+              {showARMenu && (
+                <div className="absolute bottom-3 right-3 z-20 w-[min(16rem,calc(100vw-2rem))] rounded-lg border border-[rgba(0,206,209,0.3)] bg-[rgba(13,27,42,0.98)] p-3 shadow-xl backdrop-blur-xl sm:bottom-4 sm:right-4 sm:w-64">
                   {/* Header */}
                   <div className="flex items-center justify-between mb-3 pb-3 border-b border-[rgba(0,206,209,0.2)]">
                     <span className="text-xs font-semibold text-white uppercase">
@@ -383,7 +396,7 @@ function CameraCapture({
 
               {countdown !== null && (
                 <div className="absolute inset-0 flex items-center justify-center bg-black/50">
-                  <span className="text-9xl font-bold text-[#00CED1] animate-pulse">
+                  <span className="animate-pulse text-6xl font-bold text-[#00CED1] sm:text-9xl">
                     {countdown}
                   </span>
                 </div>
@@ -393,11 +406,11 @@ function CameraCapture({
         </div>
 
         {/* Controls */}
-        <div className="p-6 flex items-center justify-center gap-4 border-t border-[rgba(0,206,209,0.2)] bg-[rgba(13,27,42,0.5)]">
+        <div className="flex w-full flex-col items-stretch justify-center gap-3 border-t border-[rgba(0,206,209,0.2)] bg-[rgba(13,27,42,0.5)] p-4 sm:flex-row sm:items-center sm:gap-4 sm:p-6">
           <button
             onClick={startCountdown}
             disabled={!isStreaming || countdown !== null}
-            className="px-8 py-3 bg-[#00CED1] text-white rounded-full font-medium hover:bg-[#00b8ba] transition disabled:opacity-50 disabled:cursor-not-allowed shadow-[0_0_20px_rgba(0,206,209,0.3)]"
+            className="w-full rounded-full bg-[#00CED1] px-4 py-3 text-sm font-medium text-white shadow-[0_0_20px_rgba(0,206,209,0.3)] transition hover:bg-[#00b8ba] disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto sm:px-8 sm:text-base"
           >
             {countdown !== null ? "Taking Photo..." : "Take Photo (3s timer)"}
           </button>
@@ -405,7 +418,7 @@ function CameraCapture({
           <button
             onClick={capturePhoto}
             disabled={!isStreaming}
-            className="px-8 py-3 bg-[#FF6B35] text-white rounded-full font-medium hover:bg-[#e55a2b] transition disabled:opacity-50 disabled:cursor-not-allowed"
+            className="w-full rounded-full bg-[#FF6B35] px-4 py-3 text-sm font-medium text-white transition hover:bg-[#e55a2b] disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto sm:px-8 sm:text-base"
           >
             Instant Capture
           </button>
@@ -414,7 +427,7 @@ function CameraCapture({
           <button
             onClick={() => setShowARMenu(!showARMenu)}
             disabled={!isStreaming}
-            className={`px-6 py-3 rounded-full font-medium transition flex items-center gap-2 ${
+            className={`flex w-full items-center justify-center gap-2 rounded-full px-4 py-3 text-sm font-medium transition sm:w-auto sm:px-6 sm:text-base ${
               showARMenu || (isAREnabled && selectedProp)
                 ? "bg-purple-600 text-white shadow-[0_0_15px_rgba(147,51,234,0.5)]"
                 : "bg-[rgba(255,255,255,0.1)] text-white hover:bg-[rgba(255,255,255,0.2)]"
