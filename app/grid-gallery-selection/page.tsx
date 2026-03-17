@@ -121,11 +121,39 @@ function CameraCaptureModal({
   const streamRef = useRef<MediaStream | null>(null);
   const [isStreaming, setIsStreaming] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [needsUserStart, setNeedsUserStart] = useState(false);
   const [countdown, setCountdown] = useState<number | null>(null);
   const [cameraFacingMode, setCameraFacingMode] = useState<
     "user" | "environment"
   >("user");
   const isFrontCamera = cameraFacingMode === "user";
+
+  const getCameraErrorMessage = useCallback((err: unknown) => {
+    if (typeof window !== "undefined" && !window.isSecureContext) {
+      return "Camera needs HTTPS (or localhost). Open this page in a secure context.";
+    }
+
+    if (!navigator.mediaDevices?.getUserMedia) {
+      return "This device/browser does not support camera access.";
+    }
+
+    if (err instanceof DOMException) {
+      if (err.name === "NotAllowedError") {
+        return "Camera permission is blocked. Please allow camera access in browser settings.";
+      }
+      if (err.name === "NotFoundError") {
+        return "No camera device was found on this phone.";
+      }
+      if (err.name === "NotReadableError") {
+        return "Camera is already in use by another app.";
+      }
+      if (err.name === "OverconstrainedError") {
+        return "Selected camera mode is not available on this device.";
+      }
+    }
+
+    return "Unable to access camera. Please allow camera permissions.";
+  }, []);
 
   const stopCamera = useCallback(() => {
     if (streamRef.current) {
@@ -133,15 +161,18 @@ function CameraCaptureModal({
       streamRef.current = null;
     }
     setIsStreaming(false);
+    setNeedsUserStart(false);
   }, []);
 
   const handleVideoReady = useCallback(() => {
     setIsStreaming(true);
+    setNeedsUserStart(false);
     setError(null);
   }, []);
 
   const startCamera = useCallback(async () => {
     try {
+      setNeedsUserStart(false);
       const stream = await navigator.mediaDevices.getUserMedia({
         video: {
           facingMode: cameraFacingMode,
@@ -154,19 +185,23 @@ function CameraCaptureModal({
       if (videoRef.current) {
         streamRef.current = stream;
         videoRef.current.srcObject = stream;
+        setIsStreaming(true);
+        setNeedsUserStart(false);
         try {
           await videoRef.current.play();
           setIsStreaming(true);
         } catch {
-          // Fallback to video readiness events where autoplay is delayed.
+          // Some mobile browsers require a direct user gesture before playback.
+          setIsStreaming(false);
+          setNeedsUserStart(true);
         }
       }
       setError(null);
     } catch (err) {
-      setError("Unable to access camera. Please allow camera permissions.");
+      setError(getCameraErrorMessage(err));
       console.error("Camera error:", err);
     }
-  }, [cameraFacingMode]);
+  }, [cameraFacingMode, getCameraErrorMessage]);
 
   useEffect(() => {
     startCamera();
@@ -217,7 +252,7 @@ function CameraCaptureModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 p-2 sm:p-4">
-      <div className="relative flex max-h-[calc(100dvh-1rem)] w-full max-w-3xl flex-col overflow-hidden rounded-2xl border border-[rgba(0,206,209,0.3)] bg-[rgba(13,27,42,0.95)] sm:max-h-[calc(100dvh-2rem)]">
+      <div className="relative flex max-h-[85dvh] w-full max-w-3xl flex-col overflow-hidden rounded-2xl border border-[rgba(0,206,209,0.3)] bg-[rgba(13,27,42,0.95)] sm:max-h-[calc(100dvh-2rem)]">
         <div className="flex items-center justify-between border-b border-[rgba(0,206,209,0.2)] px-4 py-3 sm:p-4">
           <h3 className="text-lg font-semibold text-white">Take Picture</h3>
           <button
@@ -231,7 +266,7 @@ function CameraCaptureModal({
           </button>
         </div>
 
-        <div className="relative min-h-[220px] flex-1 bg-black sm:aspect-video sm:min-h-0 sm:flex-none">
+        <div className="relative aspect-video min-h-[190px] max-h-[42dvh] bg-black sm:min-h-0 sm:max-h-none sm:flex-none">
           {error ? (
             <div className="absolute inset-0 flex items-center justify-center p-4 text-center">
               <div>
@@ -257,6 +292,17 @@ function CameraCaptureModal({
                 className="h-full w-full object-cover"
                 style={{ transform: isFrontCamera ? "scaleX(-1)" : "none" }}
               />
+
+              {!isStreaming && needsUserStart && (
+                <div className="absolute inset-0 z-20 flex items-center justify-center bg-black/45 p-4">
+                  <button
+                    onClick={startCamera}
+                    className="rounded-full border border-[#00CED1]/60 bg-[rgba(13,27,42,0.88)] px-5 py-2 text-xs font-semibold uppercase tracking-[0.16em] text-[#00CED1] transition hover:bg-[rgba(13,27,42,0.96)]"
+                  >
+                    Tap to Start Camera
+                  </button>
+                </div>
+              )}
 
               {countdown !== null && (
                 <div className="absolute inset-0 flex items-center justify-center bg-black/50">
