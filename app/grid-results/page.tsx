@@ -194,43 +194,6 @@ export default function GridResultsPage() {
 
   const previewWidthClass = "max-w-md";
 
-  const handlePrint = async () => {
-    if (typeof window === "undefined") return;
-
-    try {
-      const dataUrl = await generateResultImage({
-        photos,
-        config,
-        theme: resultTheme,
-      });
-
-      const printWindow = window.open("", "_blank");
-      if (printWindow) {
-        printWindow.document.write(`
-					<html>
-						<head>
-							<title>Print Photo</title>
-							<style>
-								@page { size: auto; margin: 0mm; }
-								body { margin: 0; display: flex; justify-content: center; align-items: center; height: 100vh; overflow: hidden; }
-								img { max-width: 100%; max-height: 100vh; object-fit: contain; display: block; }
-								@media print {
-									body { -webkit-print-color-adjust: exact; }
-								}
-							</style>
-						</head>
-						<body>
-							<img src="${dataUrl}" onload="window.print(); window.close();" />
-						</body>
-					</html>
-				`);
-        printWindow.document.close();
-      }
-    } catch (err) {
-      console.error("Print generation error:", err);
-    }
-  };
-
   const handleDownload = async () => {
     try {
       const dataUrl = await generateResultImage({
@@ -255,13 +218,13 @@ export default function GridResultsPage() {
       <main className="relative flex-1 px-6 py-10 pt-24 sm:px-10 lg:px-16 overflow-hidden">
         <div className="relative z-10 max-w-6xl mx-auto">
           <div className="text-center">
-            <StationBadge>Station 04</StationBadge>
+            <StationBadge>Station 03</StationBadge>
             <h1 className="mt-8 flex items-center justify-center gap-3 text-4xl sm:text-5xl lg:text-6xl font-extrabold uppercase">
               <span className="tracking-tight text-white">Share</span>
               <span className="tracking-tight text-[#FF6B35]">Results</span>
             </h1>
             <p className="mt-3 text-sm sm:text-base text-gray-400 tracking-wide">
-              Your journey is complete. Download or share your memories.
+              Your journey is complete. Download your memories.
             </p>
             <div className="mt-6 flex items-center justify-center">
               <span className="inline-flex items-center justify-center gap-4 px-8 py-3 text-[11px] font-semibold uppercase tracking-[0.25em] border border-[#00CED1]/50 text-[#00CED1] bg-[rgba(13,27,42,0.5)] rounded-full">
@@ -279,53 +242,35 @@ export default function GridResultsPage() {
               id="print-area"
               className={`mx-auto w-full ${previewWidthClass}`}
             >
-              <ResultsPreview config={config} photos={photos} previewRef={previewRef} />
+              <ResultsPreview
+                config={config}
+                photos={photos}
+                previewRef={previewRef}
+              />
             </div>
           </section>
 
           <div className={`mt-10 mx-auto w-full ${previewWidthClass}`}>
-            <div className="flex flex-row gap-3 sm:gap-4">
-              <button
-                type="button"
-                className="flex h-16 w-full flex-1 items-center justify-center gap-2 bg-[#00CED1] px-4 text-[10px] sm:text-xs font-semibold uppercase tracking-[0.15em] text-white rounded-full shadow-[0_20px_45px_rgba(0,206,209,0.25)] transition hover:bg-[#00b8ba]"
-                onClick={handleDownload}
+            <button
+              type="button"
+              className="flex h-16 w-full items-center justify-center gap-2 bg-[#00CED1] px-4 text-[10px] sm:text-xs font-semibold uppercase tracking-[0.15em] text-white rounded-full shadow-[0_20px_45px_rgba(0,206,209,0.25)] transition hover:bg-[#00b8ba]"
+              onClick={handleDownload}
+            >
+              <svg
+                className="w-5 h-5 shrink-0"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
               >
-                <svg
-                  className="w-5 h-5 shrink-0"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"
-                  />
-                </svg>
-                Download
-              </button>
-              <button
-                type="button"
-                className="flex h-16 w-full flex-1 items-center justify-center gap-2 bg-[rgba(13,27,42,0.8)] border border-[rgba(0,206,209,0.3)] px-4 text-[10px] sm:text-xs font-semibold uppercase tracking-[0.15em] text-white rounded-full transition hover:border-[#00CED1]"
-                onClick={handlePrint}
-              >
-                <svg
-                  className="w-5 h-5 shrink-0"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"
-                  />
-                </svg>
-                Print
-              </button>
-            </div>
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"
+                />
+              </svg>
+              Download
+            </button>
           </div>
 
           <div className="mt-12 flex items-center justify-center">

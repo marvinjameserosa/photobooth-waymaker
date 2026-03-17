@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useRef, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import BokehBackground from "@/components/ui/BokehBackground";
 
 import { useRouter } from "next/navigation";
@@ -109,6 +109,164 @@ function Polaroid({ photo }: { photo: PhotoCard }) {
   );
 }
 
+function CameraCaptureModal({
+  onCapture,
+  onClose,
+}: {
+  onCapture: (imageData: string) => void;
+  onClose: () => void;
+}) {
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const streamRef = useRef<MediaStream | null>(null);
+  const [isStreaming, setIsStreaming] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [countdown, setCountdown] = useState<number | null>(null);
+
+  const stopCamera = useCallback(() => {
+    if (streamRef.current) {
+      streamRef.current.getTracks().forEach((track) => track.stop());
+      streamRef.current = null;
+    }
+  }, []);
+
+  const startCamera = useCallback(async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: {
+          facingMode: "user",
+          width: { ideal: 1280 },
+          height: { ideal: 720 },
+        },
+        audio: false,
+      });
+
+      if (videoRef.current) {
+        streamRef.current = stream;
+        videoRef.current.srcObject = stream;
+      }
+      setError(null);
+    } catch (err) {
+      setError("Unable to access camera. Please allow camera permissions.");
+      console.error("Camera error:", err);
+    }
+  }, []);
+
+  useEffect(() => {
+    startCamera();
+    return () => stopCamera();
+  }, [startCamera, stopCamera]);
+
+  const capturePhoto = useCallback(() => {
+    if (!videoRef.current || !canvasRef.current) return;
+
+    const video = videoRef.current;
+    const canvas = canvasRef.current;
+    const scale = 0.8;
+    canvas.width = video.videoWidth * scale;
+    canvas.height = video.videoHeight * scale;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+
+    ctx.translate(canvas.width, 0);
+    ctx.scale(-1, 1);
+    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+    const imageData = canvas.toDataURL("image/jpeg", 0.9);
+    onCapture(imageData);
+  }, [onCapture]);
+
+  useEffect(() => {
+    if (countdown === null) return;
+
+    if (countdown === 0) {
+      capturePhoto();
+      return;
+    }
+
+    const timer = window.setTimeout(() => {
+      setCountdown((prev) => (prev !== null ? prev - 1 : null));
+    }, 1000);
+
+    return () => window.clearTimeout(timer);
+  }, [countdown, capturePhoto]);
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 p-4">
+      <div className="relative w-full max-w-3xl overflow-hidden rounded-2xl border border-[rgba(0,206,209,0.3)] bg-[rgba(13,27,42,0.95)]">
+        <div className="flex items-center justify-between border-b border-[rgba(0,206,209,0.2)] p-4">
+          <h3 className="text-lg font-semibold text-white">Take Picture</h3>
+          <button
+            onClick={() => {
+              stopCamera();
+              onClose();
+            }}
+            className="flex h-8 w-8 items-center justify-center rounded-full bg-[rgba(255,107,53,0.2)] text-[#FF6B35] transition hover:bg-[rgba(255,107,53,0.3)]"
+          >
+            x
+          </button>
+        </div>
+
+        <div className="relative aspect-video bg-black">
+          {error ? (
+            <div className="absolute inset-0 flex items-center justify-center p-4 text-center">
+              <div>
+                <p className="mb-4 text-[#FF6B35]">{error}</p>
+                <button
+                  onClick={startCamera}
+                  className="rounded-full bg-[#00CED1] px-6 py-2 text-white transition hover:bg-[#00b8ba]"
+                >
+                  Try Again
+                </button>
+              </div>
+            </div>
+          ) : (
+            <>
+              <video
+                ref={videoRef}
+                autoPlay
+                playsInline
+                muted
+                onLoadedMetadata={() => setIsStreaming(true)}
+                className="h-full w-full object-cover"
+                style={{ transform: "scaleX(-1)" }}
+              />
+
+              {countdown !== null && (
+                <div className="absolute inset-0 flex items-center justify-center bg-black/50">
+                  <span className="animate-pulse text-9xl font-bold text-[#00CED1]">
+                    {countdown}
+                  </span>
+                </div>
+              )}
+            </>
+          )}
+        </div>
+
+        <div className="flex items-center justify-center gap-4 border-t border-[rgba(0,206,209,0.2)] bg-[rgba(13,27,42,0.5)] p-6">
+          <button
+            onClick={() => setCountdown(3)}
+            disabled={!isStreaming || countdown !== null}
+            className="rounded-full bg-[#00CED1] px-8 py-3 font-medium text-white shadow-[0_0_20px_rgba(0,206,209,0.3)] transition hover:bg-[#00b8ba] disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            {countdown !== null ? "Taking Photo..." : "Take Photo (3s timer)"}
+          </button>
+
+          <button
+            onClick={capturePhoto}
+            disabled={!isStreaming}
+            className="rounded-full bg-[#FF6B35] px-8 py-3 font-medium text-white transition hover:bg-[#e55a2b] disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            Instant Capture
+          </button>
+        </div>
+
+        <canvas ref={canvasRef} className="hidden" />
+      </div>
+    </div>
+  );
+}
+
 function reorderPhotos(
   items: (string | null)[],
   fromIndex: number,
@@ -130,7 +288,10 @@ export default function SubwayGallery() {
   });
 
   const dragFromIndexRef = useRef<number | null>(null);
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
   const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
+  const [replaceIndex, setReplaceIndex] = useState<number | null>(null);
+  const [showCameraModal, setShowCameraModal] = useState(false);
 
   const [config] = useState<{
     size: number;
@@ -186,22 +347,77 @@ export default function SubwayGallery() {
     setDragOverIndex(null);
   };
 
+  const handleReplaceRequest = (index: number) => {
+    setReplaceIndex(index);
+    fileInputRef.current?.click();
+  };
+
+  const handleTakePhotoRequest = (index: number) => {
+    setReplaceIndex(index);
+    setShowCameraModal(true);
+  };
+
+  const handleCameraCapture = (imageData: string) => {
+    if (replaceIndex === null) return;
+
+    setPhotos((prev) => {
+      const next = [...prev];
+      next[replaceIndex] = imageData;
+      sessionStorage.setItem("photobooth_photos", JSON.stringify(next));
+      return next;
+    });
+
+    setShowCameraModal(false);
+    setReplaceIndex(null);
+  };
+
+  const handleReplacePhoto = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file || replaceIndex === null) return;
+
+    const reader = new FileReader();
+    reader.onload = () => {
+      const image = new Image();
+      image.onload = () => {
+        const canvas = document.createElement("canvas");
+        const maxDim = 1280;
+        let width = image.width;
+        let height = image.height;
+
+        if (width > height && width > maxDim) {
+          height = (height * maxDim) / width;
+          width = maxDim;
+        } else if (height > maxDim) {
+          width = (width * maxDim) / height;
+          height = maxDim;
+        }
+
+        canvas.width = width;
+        canvas.height = height;
+
+        const ctx = canvas.getContext("2d");
+        if (!ctx) return;
+
+        ctx.drawImage(image, 0, 0, width, height);
+        const compressedData = canvas.toDataURL("image/jpeg", 0.85);
+
+        setPhotos((prev) => {
+          const next = [...prev];
+          next[replaceIndex] = compressedData;
+          sessionStorage.setItem("photobooth_photos", JSON.stringify(next));
+          return next;
+        });
+      };
+      image.src = String(reader.result);
+    };
+
+    reader.readAsDataURL(file);
+    event.target.value = "";
+    setReplaceIndex(null);
+  };
+
   const handleBack = () => {
-    if (config) {
-      const id =
-        config.title === "SUBWAY 1"
-          ? "1"
-          : config.title === "SUBWAY 2"
-            ? "2"
-            : config.title === "ELEVATOR"
-              ? "3"
-              : config.title === "TRANSIT"
-                ? "4"
-                : "1";
-      router.push(`/capture-photos?station=${id}`);
-    } else {
-      router.push("/capture-photos?station=1");
-    }
+    router.push("/capture-photos?station=3");
   };
 
   return (
@@ -209,9 +425,27 @@ export default function SubwayGallery() {
       <BokehBackground />
 
       <main className="relative flex-1 px-6 py-10 pt-24 sm:px-10 lg:px-16 overflow-hidden">
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept="image/*"
+          className="hidden"
+          onChange={handleReplacePhoto}
+        />
+
+        {showCameraModal && (
+          <CameraCaptureModal
+            onCapture={handleCameraCapture}
+            onClose={() => {
+              setShowCameraModal(false);
+              setReplaceIndex(null);
+            }}
+          />
+        )}
+
         <div className="relative z-10 max-w-6xl mx-auto">
           <div className="text-center">
-            <StationBadge>Station 03</StationBadge>
+            <StationBadge>Station 02</StationBadge>
             <h1 className="mt-8 flex items-center justify-center gap-3 text-4xl sm:text-5xl lg:text-6xl font-extrabold uppercase">
               <span className="tracking-tight text-white">Photo</span>
               <span className="tracking-tight text-[#00CED1]">Gallery</span>
@@ -248,6 +482,28 @@ export default function SubwayGallery() {
                       }
                     >
                       <Polaroid photo={photo} />
+                      <div className="mt-4 flex flex-wrap items-center justify-center gap-2">
+                        <button
+                          type="button"
+                          onClick={(event) => {
+                            event.stopPropagation();
+                            handleReplaceRequest(index);
+                          }}
+                          className="rounded-full border border-[rgba(0,206,209,0.45)] bg-[rgba(13,27,42,0.8)] px-5 py-2 text-[11px] font-semibold uppercase tracking-[0.15em] text-[#00CED1] transition hover:border-[#00CED1] hover:bg-[rgba(13,27,42,0.95)]"
+                        >
+                          {photo.src ? "Replace Photo" : "Add Photo"}
+                        </button>
+                        <button
+                          type="button"
+                          onClick={(event) => {
+                            event.stopPropagation();
+                            handleTakePhotoRequest(index);
+                          }}
+                          className="rounded-full border border-[#FF6B35]/50 bg-[#FF6B35]/15 px-5 py-2 text-[11px] font-semibold uppercase tracking-[0.15em] text-[#FF6B35] transition hover:border-[#FF6B35] hover:bg-[#FF6B35]/25"
+                        >
+                          Take Photo
+                        </button>
+                      </div>
                     </div>
                   ))}
                 </div>

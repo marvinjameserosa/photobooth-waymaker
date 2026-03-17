@@ -600,7 +600,7 @@ function CapturePhotosContent() {
       <main className="relative flex-1 p-6 md:p-12 pt-24">
         <div className="relative max-w-6xl mx-auto z-10">
           <div className="text-center mb-8">
-            <StationBadge>STATION 02</StationBadge>
+            <StationBadge>STATION 01</StationBadge>
             <h1 className="mt-6 tracking-tight">
               <span className="block text-4xl md:text-6xl font-normal leading-none text-white">
                 CAPTURE

@@ -4,28 +4,38 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { DINEng } from "@/lib/fonts";
 
-export type StationItem = {
+type SidebarStep = {
   id: number;
   title: string;
-  subtitle?: string;
+  subtitle: string;
   href: string;
 };
 
-// Standard Journey Steps
-export const journeySteps: StationItem[] = [
-  { id: 1, title: "STATION 01", subtitle: "SELECT LAYOUT", href: "/grid-layout-selection" },
-  { id: 2, title: "STATION 02", subtitle: "CAPTURE PHOTOS", href: "/capture-photos" },
-  { id: 3, title: "STATION 03", subtitle: "PHOTO GALLERY", href: "/grid-gallery-selection" },
-  { id: 4, title: "STATION 04", subtitle: "SHARE RESULTS", href: "/grid-results" },
+const journeySteps: SidebarStep[] = [
+  {
+    id: 1,
+    title: "STATION 01",
+    subtitle: "CAPTURE PHOTOS",
+    href: "/capture-photos?station=3",
+  },
+  {
+    id: 2,
+    title: "STATION 02",
+    subtitle: "PHOTO GALLERY",
+    href: "/grid-gallery-selection",
+  },
+  {
+    id: 3,
+    title: "STATION 03",
+    subtitle: "SHARE RESULTS",
+    href: "/grid-results",
+  },
 ];
 
-
-// Arduino Day Philippines Color Scheme
 const COLORS = {
-  COMPLETED: "#00CED1",  // Teal for completed
-  ACTIVE: "#FF6B35",     // Orange for active
-  FUTURE: "#4A5568",     // Muted gray for future
-  LINE: "#1a3a4a",       // Dark teal for line
+  COMPLETED: "#00CED1",
+  ACTIVE: "#FF6B35",
+  FUTURE: "#4A5568",
 };
 
 interface SidebarProps {
@@ -38,24 +48,50 @@ interface SidebarProps {
  * Desktop: Fixed on left
  * Mobile: Hidden behind hamburger, slides in as overlay
  */
-export default function Sidebar({
-  isOpen = false,
-  onClose,
-}: SidebarProps) {
+export default function Sidebar({ isOpen = false, onClose }: SidebarProps) {
   const pathname = usePathname();
+  const [hasCapturedPhotos, setHasCapturedPhotos] = React.useState(false);
 
-  // Determine active station based on path
-  // This is a simple heuristic. You might need more complex logic for sub-routes.
-  const activeStationId = React.useMemo(() => {
-    // Based on the new journeySteps, the first step is grid-layout-selection
-    if (pathname.includes("grid-layout")) return 1;
-    if (pathname.includes("capture-photos")) return 2;
-    if (pathname.includes("grid-gallery")) return 3;
-    if (pathname.includes("grid-results")) return 4; // implied end state
-    return 0; // No active station
+  React.useEffect(() => {
+    if (typeof window === "undefined") return;
+
+    const syncPhotoState = () => {
+      try {
+        const stored = sessionStorage.getItem("photobooth_photos");
+        if (!stored) {
+          setHasCapturedPhotos(false);
+          return;
+        }
+
+        const parsed = JSON.parse(stored) as unknown;
+        const hasPhotos =
+          Array.isArray(parsed) && parsed.some((photo) => Boolean(photo));
+        setHasCapturedPhotos(hasPhotos);
+      } catch {
+        setHasCapturedPhotos(false);
+      }
+    };
+
+    syncPhotoState();
+    window.addEventListener("focus", syncPhotoState);
+    return () => window.removeEventListener("focus", syncPhotoState);
   }, [pathname]);
 
-  const activeIndex = journeySteps.findIndex(s => s.id === activeStationId);
+  const activeStepId = React.useMemo(() => {
+    if (
+      pathname.includes("capture-photos") ||
+      pathname.includes("grid-layout")
+    ) {
+      return 1;
+    }
+    if (pathname.includes("grid-gallery")) return 2;
+    if (pathname.includes("grid-results")) return 3;
+    return 0;
+  }, [pathname]);
+
+  const activeIndex = journeySteps.findIndex(
+    (step) => step.id === activeStepId,
+  );
 
   return (
     <>
@@ -75,57 +111,88 @@ export default function Sidebar({
           transform transition-transform duration-300 ease-in-out
           ${isOpen ? "translate-x-0" : "translate-x-full lg:translate-x-0"}
         `}
-        style={{ fontFamily: 'TT Firs Neue Trial Var Roman, sans-serif' }}
+        style={{ fontFamily: "TT Firs Neue Trial Var Roman, sans-serif" }}
       >
         <div className="flex-1 flex flex-col">
           {/* Header Section */}
           <div className="mb-6 flex justify-between items-start">
             <Link href="/" onClick={onClose} className="block group">
-              <h2 className={`text-4xl font-extrabold tracking-tight text-white group-hover:opacity-80 transition-opacity`}>
+              <h2
+                className={`text-4xl font-extrabold tracking-tight text-white group-hover:opacity-80 transition-opacity`}
+              >
                 Snap<span className="text-[#00CED1]">Grid</span>
               </h2>
-              <p className="text-xs text-gray-400 mt-1 group-hover:text-gray-300 transition-colors">Your photobooth journey</p>
+              <p className="text-xs text-gray-400 mt-1 group-hover:text-gray-300 transition-colors">
+                Your photobooth journey
+              </p>
             </Link>
             {/* Mobile Close Button */}
             <button
               onClick={onClose}
               className="lg:hidden text-gray-400 hover:text-white p-1"
             >
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              <svg
+                className="w-6 h-6"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M6 18L18 6M6 6l12 12"
+                />
               </svg>
             </button>
           </div>
           <hr className="border-[rgba(0,206,209,0.3)] mb-6"></hr>
 
-          {/* Status Section */}
           <div className="mb-6">
             <div className="flex items-center gap-2 mb-4">
-              <svg width="20" height="12" viewBox="0 0 32 16" fill="none" aria-hidden>
-                <path d="M20 3l7 5-7 5" stroke="#00CED1" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-                <path d="M2 8h22" stroke="#00CED1" strokeWidth="1.5" strokeLinecap="round" />
+              <svg
+                width="20"
+                height="12"
+                viewBox="0 0 32 16"
+                fill="none"
+                aria-hidden
+              >
+                <path
+                  d="M20 3l7 5-7 5"
+                  stroke="#00CED1"
+                  strokeWidth="1.5"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+                <path
+                  d="M2 8h22"
+                  stroke="#00CED1"
+                  strokeWidth="1.5"
+                  strokeLinecap="round"
+                />
               </svg>
-              <h4 className={`text-lg text-[#00CED1] uppercase tracking-wide font-semibold ${DINEng.className}`}>Your Journey</h4>
+              <h4
+                className={`text-lg text-[#00CED1] uppercase tracking-wide font-semibold ${DINEng.className}`}
+              >
+                Your Journey
+              </h4>
             </div>
 
-            {/* Navigation/Station List */}
             <nav className="relative space-y-6">
-              {/* The vertical line behind the dots */}
               <div
                 aria-hidden
-                className="absolute top-2 bottom-2 w-[2px] bg-[#1a3a4a]"
+                className="absolute top-2 bottom-2 w-0.5 bg-[#1a3a4a]"
                 style={{ left: "5px" }}
               />
 
-              {journeySteps.map((st, index) => {
-                const isActive = st.id === activeStationId;
+              {journeySteps.map((step, index) => {
+                const isActive = step.id === activeStepId;
+                const isLocked = step.id >= 2 && !hasCapturedPhotos;
 
-                // Color Logic
                 let statusColor = COLORS.FUTURE;
-                if (index < activeIndex || (activeIndex === -1 && activeStationId > st.id)) statusColor = COLORS.COMPLETED;
+                if (index < activeIndex) statusColor = COLORS.COMPLETED;
                 if (isActive) statusColor = COLORS.ACTIVE;
-                if ((activeStationId as number) === 5) statusColor = COLORS.COMPLETED; // Assuming 5 is results
-
+                if (isLocked) statusColor = COLORS.FUTURE;
 
                 const dotSize = isActive ? 16 : 10;
 
@@ -133,22 +200,36 @@ export default function Sidebar({
                   backgroundColor: statusColor,
                   width: `${dotSize}px`,
                   height: `${dotSize}px`,
-                  // Removed marginLeft, using flex positioning in container
-                  transition: 'all 0.3s ease',
-                  boxShadow: isActive ? `0 0 12px ${statusColor}` : 'none'
+                  transition: "all 0.3s ease",
+                  boxShadow: isActive ? `0 0 12px ${statusColor}` : "none",
                 };
 
-                const titleColor = isActive ? "text-white" : (statusColor === COLORS.COMPLETED ? "text-[#00CED1]" : "text-gray-400");
+                const titleColor = isActive
+                  ? "text-white"
+                  : statusColor === COLORS.COMPLETED
+                    ? "text-[#00CED1]"
+                    : "text-gray-400";
                 const subtitleColor = isActive ? "text-white" : "text-gray-500";
 
                 return (
                   <Link
-                    key={st.id}
-                    href={st.href}
-                    onClick={() => onClose?.()}
-                    className="w-full flex items-start gap-6 text-left group hover:bg-[rgba(0,206,209,0.05)] p-2 -ml-2 rounded-lg transition-colors relative"
+                    key={step.id}
+                    href={step.href}
+                    onClick={(event) => {
+                      if (isLocked) {
+                        event.preventDefault();
+                        return;
+                      }
+                      onClose?.();
+                    }}
+                    aria-disabled={isLocked}
+                    className={
+                      "w-full flex items-start gap-6 text-left p-2 -ml-2 rounded-lg transition-colors relative " +
+                      (isLocked
+                        ? "cursor-not-allowed opacity-55"
+                        : "group hover:bg-[rgba(0,206,209,0.05)]")
+                    }
                   >
-                    {/* The Dot Container to help alignment */}
                     <div className="flex-none w-3 flex justify-center mt-1.5 relative z-10">
                       <span
                         className="rounded-full block"
@@ -158,26 +239,34 @@ export default function Sidebar({
 
                     <div className="flex-1">
                       <div className="flex items-center gap-2">
-                        <p className={`text-sm font-semibold uppercase ${titleColor} transition-colors`}>
-                          {st.title}
+                        <p
+                          className={`text-sm font-semibold uppercase ${titleColor} transition-colors`}
+                        >
+                          {step.title}
                         </p>
 
-                        {/* ACTIVE Badge */}
-                        {isActive && (
+                        {isActive && !isLocked && (
                           <span
                             className="ml-2 bg-[#FF6B35] text-white text-xs px-2 py-0.5 rounded-full"
                             style={{
                               fontSize: "0.6rem",
-                              fontFamily: "Arial, Helvetica, sans-serif"
+                              fontFamily: "Arial, Helvetica, sans-serif",
                             }}
                           >
                             ACTIVE
                           </span>
                         )}
                       </div>
-                      <p className={`text-sm uppercase font-semibold mt-0.5 ${subtitleColor} ${DINEng.className} transition-colors`}>
-                        {st.subtitle}
+                      <p
+                        className={`text-sm uppercase font-semibold mt-0.5 ${subtitleColor} ${DINEng.className} transition-colors`}
+                      >
+                        {step.subtitle}
                       </p>
+                      {isLocked && (
+                        <p className="mt-1 text-[11px] uppercase tracking-wider text-gray-500">
+                          Capture photos first
+                        </p>
+                      )}
                     </div>
                   </Link>
                 );
