@@ -215,19 +215,19 @@ export default function GridResultsPage() {
     <div className="min-h-screen flex text-gray-100">
       <BokehBackground />
 
-      <main className="relative flex-1 px-6 py-10 pt-24 sm:px-10 lg:px-16 overflow-hidden">
-        <div className="relative z-10 max-w-6xl mx-auto">
+      <main className="relative flex-1 overflow-hidden px-4 py-8 pt-20 sm:px-10 sm:py-10 sm:pt-24 lg:px-16">
+        <div className="relative z-10 mx-auto max-w-6xl">
           <div className="text-center">
             <StationBadge>Station 03</StationBadge>
-            <h1 className="mt-8 flex items-center justify-center gap-3 text-4xl sm:text-5xl lg:text-6xl font-extrabold uppercase">
+            <h1 className="mt-6 flex items-center justify-center gap-2 text-3xl font-extrabold uppercase sm:mt-8 sm:gap-3 sm:text-5xl lg:text-6xl">
               <span className="tracking-tight text-white">Share</span>
               <span className="tracking-tight text-[#FF6B35]">Results</span>
             </h1>
-            <p className="mt-3 text-sm sm:text-base text-gray-400 tracking-wide">
+            <p className="mt-3 px-2 text-xs tracking-[0.08em] text-gray-400 sm:text-base sm:tracking-wide">
               Your journey is complete. Download your memories.
             </p>
             <div className="mt-6 flex items-center justify-center">
-              <span className="inline-flex items-center justify-center gap-4 px-8 py-3 text-[11px] font-semibold uppercase tracking-[0.25em] border border-[#00CED1]/50 text-[#00CED1] bg-[rgba(13,27,42,0.5)] rounded-full">
+              <span className="inline-flex items-center justify-center gap-3 rounded-full border border-[#00CED1]/50 bg-[rgba(13,27,42,0.5)] px-5 py-2 text-[10px] font-semibold uppercase tracking-[0.17em] text-[#00CED1] sm:gap-4 sm:px-8 sm:py-3 sm:text-[11px] sm:tracking-[0.25em]">
                 <span
                   className="h-3 w-3 rounded-full bg-[#00CED1] shadow-[0_0_10px_rgba(0,206,209,0.5)]"
                   aria-hidden
@@ -237,7 +237,7 @@ export default function GridResultsPage() {
             </div>
           </div>
 
-          <section className="mt-12">
+          <section className="mt-8 sm:mt-12">
             <div
               id="print-area"
               className={`mx-auto w-full ${previewWidthClass}`}
@@ -250,10 +250,10 @@ export default function GridResultsPage() {
             </div>
           </section>
 
-          <div className={`mt-10 mx-auto w-full ${previewWidthClass}`}>
+          <div className={`mx-auto mt-8 w-full sm:mt-10 ${previewWidthClass}`}>
             <button
               type="button"
-              className="flex h-16 w-full items-center justify-center gap-2 bg-[#00CED1] px-4 text-[10px] sm:text-xs font-semibold uppercase tracking-[0.15em] text-white rounded-full shadow-[0_20px_45px_rgba(0,206,209,0.25)] transition hover:bg-[#00b8ba]"
+              className="flex h-14 w-full items-center justify-center gap-2 rounded-full bg-[#00CED1] px-4 text-[10px] font-semibold uppercase tracking-[0.15em] text-white shadow-[0_20px_45px_rgba(0,206,209,0.25)] transition hover:bg-[#00b8ba] sm:h-16 sm:text-xs"
               onClick={handleDownload}
             >
               <svg
@@ -273,10 +273,10 @@ export default function GridResultsPage() {
             </button>
           </div>
 
-          <div className="mt-12 flex items-center justify-center">
+          <div className="mt-8 flex items-center justify-center sm:mt-12">
             <button
               type="button"
-              className="flex items-center justify-center gap-4 bg-[#FF6B35] px-14 py-5 text-xs font-semibold uppercase tracking-[0.25em] text-white rounded-full shadow-[0_20px_45px_rgba(255,107,53,0.45)] hover:bg-[#e55a2b] transition"
+              className="flex w-full items-center justify-center gap-3 rounded-full bg-[#FF6B35] px-6 py-4 text-[10px] font-semibold uppercase tracking-[0.18em] text-white shadow-[0_20px_45px_rgba(255,107,53,0.45)] transition hover:bg-[#e55a2b] sm:w-auto sm:gap-4 sm:px-14 sm:py-5 sm:text-xs sm:tracking-[0.25em]"
               onClick={() => {
                 sessionStorage.removeItem("photobooth_photos");
                 sessionStorage.removeItem("photobooth_config");

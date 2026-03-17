@@ -619,27 +619,27 @@ function CapturePhotosContent() {
     <div className="min-h-screen flex text-gray-100">
       <BokehBackground />
 
-      <main className="relative flex-1 p-6 md:p-12 pt-24">
-        <div className="relative max-w-6xl mx-auto z-10">
-          <div className="text-center mb-8">
+      <main className="relative flex-1 px-4 py-8 pt-20 sm:px-6 sm:py-10 sm:pt-24 md:px-10 lg:px-12">
+        <div className="relative z-10 mx-auto max-w-6xl">
+          <div className="mb-6 text-center sm:mb-8">
             <StationBadge>STATION 01</StationBadge>
-            <h1 className="mt-6 tracking-tight">
-              <span className="block text-4xl md:text-6xl font-normal leading-none text-white">
+            <h1 className="mt-5 tracking-tight sm:mt-6">
+              <span className="block text-3xl font-normal leading-none text-white sm:text-4xl md:text-6xl">
                 CAPTURE
               </span>
-              <span className="block text-4xl md:text-6xl font-extrabold leading-none text-[#FF6B35]">
+              <span className="block text-3xl font-extrabold leading-none text-[#FF6B35] sm:text-4xl md:text-6xl">
                 PHOTOS
               </span>
             </h1>
 
-            <p className="mt-4 text-gray-400 flex items-center justify-center gap-3">
-              <span className="h-px w-8 bg-[rgba(0,206,209,0.5)]" />
+            <p className="mt-4 flex items-center justify-center gap-2 text-xs tracking-[0.08em] text-gray-400 sm:gap-3 sm:text-base sm:tracking-normal">
+              <span className="h-px w-5 bg-[rgba(0,206,209,0.5)] sm:w-8" />
               {capturedCount}/{activeConfig.size} PHOTOS CAPTURED
-              <span className="h-px w-8 bg-[rgba(0,206,209,0.5)]" />
+              <span className="h-px w-5 bg-[rgba(0,206,209,0.5)] sm:w-8" />
             </p>
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+          <div className="grid grid-cols-1 gap-6 lg:grid-cols-2 lg:gap-8">
             {/* Left Side - Controls */}
             <div className="space-y-6">
               {/* Preview of selected/last photo */}
@@ -682,10 +682,10 @@ function CapturePhotosContent() {
               </div>
 
               {/* Action Buttons */}
-              <div className="flex gap-4">
+              <div className="flex flex-col gap-3 sm:flex-row sm:gap-4">
                 <button
                   onClick={() => setShowCamera(true)}
-                  className="flex-1 flex items-center justify-center gap-3 py-4 bg-[#00CED1] text-white rounded-full font-medium hover:bg-[#00b8ba] transition shadow-[0_0_20px_rgba(0,206,209,0.3)]"
+                  className="flex w-full flex-1 items-center justify-center gap-3 rounded-full bg-[#00CED1] px-4 py-3 text-sm font-medium text-white shadow-[0_0_20px_rgba(0,206,209,0.3)] transition hover:bg-[#00b8ba] sm:w-auto sm:py-4 sm:text-base"
                 >
                   <svg
                     className="w-5 h-5"
@@ -704,7 +704,7 @@ function CapturePhotosContent() {
                 </button>
                 <button
                   onClick={() => fileInputRef.current?.click()}
-                  className="flex-1 flex items-center justify-center gap-3 py-4 bg-transparent border border-[#00CED1] text-[#00CED1] rounded-full font-medium hover:bg-[rgba(0,206,209,0.1)] transition"
+                  className="flex w-full flex-1 items-center justify-center gap-3 rounded-full border border-[#00CED1] bg-transparent px-4 py-3 text-sm font-medium text-[#00CED1] transition hover:bg-[rgba(0,206,209,0.1)] sm:w-auto sm:py-4 sm:text-base"
                 >
                   <svg
                     className="w-5 h-5"
@@ -735,7 +735,7 @@ function CapturePhotosContent() {
               {isComplete && (
                 <button
                   onClick={handleProceed}
-                  className="w-full py-4 bg-[#FF6B35] text-white rounded-full font-medium hover:bg-[#e55a2b] transition shadow-[0_0_25px_rgba(255,107,53,0.3)] flex items-center justify-center gap-3"
+                  className="flex w-full items-center justify-center gap-3 rounded-full bg-[#FF6B35] px-4 py-3 text-sm font-medium text-white shadow-[0_0_25px_rgba(255,107,53,0.3)] transition hover:bg-[#e55a2b] sm:py-4 sm:text-base"
                 >
                   Proceed to Gallery
                   <svg
@@ -757,7 +757,7 @@ function CapturePhotosContent() {
 
             {/* Right Side - Photo Grid */}
             <div>
-              <div className="bg-[rgba(13,27,42,0.5)] border border-[rgba(0,206,209,0.2)] rounded-xl p-6 backdrop-blur-sm">
+              <div className="rounded-xl border border-[rgba(0,206,209,0.2)] bg-[rgba(13,27,42,0.5)] p-4 backdrop-blur-sm sm:p-6">
                 <div className="flex items-center justify-between mb-4">
                   <h3 className="text-sm font-semibold uppercase tracking-wider text-[#00CED1]">
                     {activeConfig.title} Layout

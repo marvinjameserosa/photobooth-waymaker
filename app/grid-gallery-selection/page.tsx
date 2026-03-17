@@ -424,7 +424,7 @@ export default function SubwayGallery() {
     <div className="min-h-screen flex text-gray-100">
       <BokehBackground />
 
-      <main className="relative flex-1 px-6 py-10 pt-24 sm:px-10 lg:px-16 overflow-hidden">
+      <main className="relative flex-1 overflow-hidden px-4 py-8 pt-20 sm:px-10 sm:py-10 sm:pt-24 lg:px-16">
         <input
           ref={fileInputRef}
           type="file"
@@ -443,14 +443,14 @@ export default function SubwayGallery() {
           />
         )}
 
-        <div className="relative z-10 max-w-6xl mx-auto">
+        <div className="relative z-10 mx-auto max-w-6xl">
           <div className="text-center">
             <StationBadge>Station 02</StationBadge>
-            <h1 className="mt-8 flex items-center justify-center gap-3 text-4xl sm:text-5xl lg:text-6xl font-extrabold uppercase">
+            <h1 className="mt-6 flex items-center justify-center gap-2 text-3xl font-extrabold uppercase sm:mt-8 sm:gap-3 sm:text-5xl lg:text-6xl">
               <span className="tracking-tight text-white">Photo</span>
               <span className="tracking-tight text-[#00CED1]">Gallery</span>
             </h1>
-            <p className="mt-3 text-sm sm:text-base text-gray-400 tracking-wide">
+            <p className="mt-3 px-2 text-xs tracking-[0.08em] text-gray-400 sm:text-base sm:tracking-wide">
               Review your captured moments before final departure
             </p>
             <p className="mt-2 text-xs text-[#00CED1] uppercase tracking-[0.2em]">
@@ -458,13 +458,13 @@ export default function SubwayGallery() {
             </p>
           </div>
 
-          <section className="mt-12">
-            <div className="relative bg-[rgba(13,27,42,0.7)] border border-[rgba(0,206,209,0.2)] px-5 py-8 sm:px-12 sm:py-12 rounded-xl backdrop-blur-sm shadow-[0_50px_120px_rgba(0,0,0,0.65)]">
+          <section className="mt-8 sm:mt-12">
+            <div className="relative rounded-xl border border-[rgba(0,206,209,0.2)] bg-[rgba(13,27,42,0.7)] px-4 py-6 backdrop-blur-sm shadow-[0_50px_120px_rgba(0,0,0,0.65)] sm:px-12 sm:py-12">
               <div className="absolute inset-x-10 -top-3 h-px bg-linear-to-r from-transparent via-[#00CED1]/60 to-transparent" />
 
               {photoCards.length > 0 ? (
                 <div
-                  className={`grid gap-10 ${config?.columns === 1 ? "grid-cols-1 max-w-md mx-auto" : "grid-cols-1 sm:grid-cols-2"}`}
+                  className={`grid gap-6 sm:gap-10 ${config?.columns === 1 ? "mx-auto grid-cols-1 max-w-md" : "grid-cols-1 sm:grid-cols-2"}`}
                 >
                   {photoCards.map((photo, index) => (
                     <div
@@ -482,14 +482,14 @@ export default function SubwayGallery() {
                       }
                     >
                       <Polaroid photo={photo} />
-                      <div className="mt-4 flex flex-wrap items-center justify-center gap-2">
+                      <div className="mt-4 flex flex-col items-stretch justify-center gap-2 sm:flex-row sm:flex-wrap sm:items-center">
                         <button
                           type="button"
                           onClick={(event) => {
                             event.stopPropagation();
                             handleReplaceRequest(index);
                           }}
-                          className="rounded-full border border-[rgba(0,206,209,0.45)] bg-[rgba(13,27,42,0.8)] px-5 py-2 text-[11px] font-semibold uppercase tracking-[0.15em] text-[#00CED1] transition hover:border-[#00CED1] hover:bg-[rgba(13,27,42,0.95)]"
+                          className="w-full rounded-full border border-[rgba(0,206,209,0.45)] bg-[rgba(13,27,42,0.8)] px-5 py-2 text-[11px] font-semibold uppercase tracking-[0.15em] text-[#00CED1] transition hover:border-[#00CED1] hover:bg-[rgba(13,27,42,0.95)] sm:w-auto"
                         >
                           {photo.src ? "Replace Photo" : "Add Photo"}
                         </button>
@@ -499,7 +499,7 @@ export default function SubwayGallery() {
                             event.stopPropagation();
                             handleTakePhotoRequest(index);
                           }}
-                          className="rounded-full border border-[#FF6B35]/50 bg-[#FF6B35]/15 px-5 py-2 text-[11px] font-semibold uppercase tracking-[0.15em] text-[#FF6B35] transition hover:border-[#FF6B35] hover:bg-[#FF6B35]/25"
+                          className="w-full rounded-full border border-[#FF6B35]/50 bg-[#FF6B35]/15 px-5 py-2 text-[11px] font-semibold uppercase tracking-[0.15em] text-[#FF6B35] transition hover:border-[#FF6B35] hover:bg-[#FF6B35]/25 sm:w-auto"
                         >
                           Take Photo
                         </button>
@@ -523,10 +523,10 @@ export default function SubwayGallery() {
             </div>
           </section>
 
-          <div className="mt-12 flex flex-col sm:flex-row sm:items-center sm:justify-center gap-4 sm:gap-6">
+          <div className="mt-8 flex flex-col gap-3 sm:mt-12 sm:flex-row sm:items-center sm:justify-center sm:gap-6">
             <button
               onClick={handleBack}
-              className="flex items-center justify-center gap-4 border border-[rgba(0,206,209,0.5)] bg-[rgba(13,27,42,0.8)] px-10 py-5 text-xs font-semibold uppercase tracking-[0.2em] text-gray-100 rounded-full hover:border-[#00CED1] hover:bg-[rgba(13,27,42,0.9)] transition"
+              className="flex w-full items-center justify-center gap-4 rounded-full border border-[rgba(0,206,209,0.5)] bg-[rgba(13,27,42,0.8)] px-6 py-4 text-[10px] font-semibold uppercase tracking-[0.18em] text-gray-100 transition hover:border-[#00CED1] hover:bg-[rgba(13,27,42,0.9)] sm:w-auto sm:px-10 sm:py-5 sm:text-xs sm:tracking-[0.2em]"
             >
               <svg
                 className="w-4 h-4"
@@ -545,7 +545,7 @@ export default function SubwayGallery() {
             </button>
             <button
               onClick={handleProceed}
-              className="flex items-center justify-center gap-4 bg-[#FF6B35] px-10 py-5 text-xs font-semibold uppercase tracking-[0.2em] text-white rounded-full shadow-[0_20px_45px_rgba(255,107,53,0.35)] hover:bg-[#e55a2b] transition"
+              className="flex w-full items-center justify-center gap-4 rounded-full bg-[#FF6B35] px-6 py-4 text-[10px] font-semibold uppercase tracking-[0.18em] text-white shadow-[0_20px_45px_rgba(255,107,53,0.35)] transition hover:bg-[#e55a2b] sm:w-auto sm:px-10 sm:py-5 sm:text-xs sm:tracking-[0.2em]"
             >
               Proceed to Results
               <svg
