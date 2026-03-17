@@ -383,17 +383,6 @@ function CameraCapture({
 
               {/* AR Menu Dropdown - Repositioned to bottom right of video */}
               {showARMenu && (
-                <button
-                  type="button"
-                  onClick={() => setShowARMenu(false)}
-                  className="absolute left-1/2 top-3 z-30 -translate-x-1/2 rounded-full border border-[#00CED1]/60 bg-[rgba(13,27,42,0.88)] px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-[#00CED1] sm:hidden"
-                  aria-label="Close AR effects panel"
-                >
-                  Close Effects
-                </button>
-              )}
-
-              {showARMenu && (
                 <div className="absolute bottom-3 right-3 z-20 w-[min(16rem,calc(100vw-2rem))] rounded-lg border border-[rgba(0,206,209,0.3)] bg-[rgba(13,27,42,0.98)] p-3 shadow-xl backdrop-blur-xl sm:bottom-4 sm:right-4 sm:w-64">
                   {/* Header */}
                   <div className="flex items-center justify-between mb-3 pb-3 border-b border-[rgba(0,206,209,0.2)]">
