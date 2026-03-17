@@ -123,10 +123,12 @@ function CameraCapture({
       canvas.height = video.videoHeight * scale;
       const ctx = canvas.getContext("2d");
       if (ctx) {
-        // Flip horizontally
+        // Draw mirrored camera frame into the output bounds.
+        ctx.save();
         ctx.translate(canvas.width, 0);
         ctx.scale(-1, 1);
-        ctx.drawImage(video, 0, 0);
+        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+        ctx.restore();
 
         // Draw AR props if enabled
         if (
@@ -136,14 +138,19 @@ function CameraCapture({
           arCanvasRef.current
         ) {
           const arCanvas = arCanvasRef.current;
-          const arCtx = arCanvas.getContext("2d");
-          if (arCtx) {
-            // Reset transform for AR overlay
-            ctx.setTransform(1, 0, 0, 1, 0, 0);
-
-            // Draw AR canvas content
-            ctx.drawImage(arCanvas, 0, 0);
-          }
+          // Composite AR layer using explicit source and destination bounds
+          // so it matches the scaled capture dimensions exactly.
+          ctx.drawImage(
+            arCanvas,
+            0,
+            0,
+            arCanvas.width,
+            arCanvas.height,
+            0,
+            0,
+            canvas.width,
+            canvas.height,
+          );
         }
 
         const imageData = canvas.toDataURL("image/jpeg", 0.9);
