@@ -271,6 +271,8 @@ function CameraCapture({
         isCapturing.current = true;
         capturePhoto();
       }
+      setCountdown(null);
+      isCapturing.current = false;
       return;
     }
 
@@ -288,7 +290,7 @@ function CameraCapture({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 p-2 sm:p-4">
-      <div className="relative flex max-h-[85dvh] w-full max-w-3xl flex-col overflow-hidden rounded-2xl border border-[rgba(0,206,209,0.3)] bg-[rgba(13,27,42,0.95)] sm:max-h-[calc(100dvh-2rem)]">
+      <div className="relative flex h-[calc(100dvh-1rem)] w-full max-w-3xl flex-col overflow-hidden rounded-2xl border border-[rgba(0,206,209,0.3)] bg-[rgba(13,27,42,0.95)] sm:h-[min(44rem,calc(100dvh-2rem))]">
         {/* Header */}
         <div className="flex items-center justify-between border-b border-[rgba(0,206,209,0.2)] px-4 py-3 sm:p-4">
           <h3 className="text-lg font-semibold text-white">Camera Capture</h3>
@@ -304,7 +306,7 @@ function CameraCapture({
         </div>
 
         {/* Video Preview */}
-        <div className="relative aspect-video min-h-[190px] max-h-[42dvh] bg-black sm:min-h-0 sm:max-h-none sm:flex-none">
+        <div className="relative min-h-0 flex-1 bg-black">
           {error ? (
             <div className="absolute inset-0 flex items-center justify-center text-center p-4">
               <div>
