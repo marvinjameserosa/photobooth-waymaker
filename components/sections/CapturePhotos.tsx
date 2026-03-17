@@ -56,8 +56,12 @@ function CameraCapture({
   const [isStreaming, setIsStreaming] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [countdown, setCountdown] = useState<number | null>(null);
+  const [cameraFacingMode, setCameraFacingMode] = useState<
+    "user" | "environment"
+  >("user");
   const [showARMenu, setShowARMenu] = useState(false);
   const arProps = useARProps();
+  const isFrontCamera = cameraFacingMode === "user";
 
   // AR State
   const {
@@ -91,7 +95,7 @@ function CameraCapture({
     try {
       const stream = await navigator.mediaDevices.getUserMedia({
         video: {
-          facingMode: "user",
+          facingMode: cameraFacingMode,
           width: { ideal: 1280 },
           height: { ideal: 720 },
         },
@@ -100,18 +104,25 @@ function CameraCapture({
       if (videoRef.current) {
         streamRef.current = stream;
         videoRef.current.srcObject = stream;
+        try {
+          await videoRef.current.play();
+          setIsStreaming(true);
+        } catch {
+          // Fallback to metadata/canplay/playing events on stricter mobile browsers.
+        }
       }
     } catch (err) {
       setError("Unable to access camera. Please allow camera permissions.");
       console.error("Camera error:", err);
     }
-  }, []);
+  }, [cameraFacingMode]);
 
   const stopCamera = useCallback(() => {
     if (streamRef.current) {
       streamRef.current.getTracks().forEach((track) => track.stop());
       streamRef.current = null;
     }
+    setIsStreaming(false);
   }, []);
 
   const capturePhoto = useCallback(() => {
@@ -126,8 +137,10 @@ function CameraCapture({
       if (ctx) {
         // Draw mirrored camera frame into the output bounds.
         ctx.save();
-        ctx.translate(canvas.width, 0);
-        ctx.scale(-1, 1);
+        if (isFrontCamera) {
+          ctx.translate(canvas.width, 0);
+          ctx.scale(-1, 1);
+        }
         ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
         ctx.restore();
 
@@ -158,7 +171,13 @@ function CameraCapture({
         onCapture(imageData);
       }
     }
-  }, [onCapture, isAREnabled, selectedProp, predictions]);
+  }, [onCapture, isAREnabled, selectedProp, predictions, isFrontCamera]);
+
+  const toggleCameraFacingMode = useCallback(() => {
+    setCameraFacingMode((prev) => (prev === "user" ? "environment" : "user"));
+    setIsStreaming(false);
+    setError(null);
+  }, []);
 
   useEffect(() => {
     let mounted = true;
@@ -167,7 +186,7 @@ function CameraCapture({
       try {
         const stream = await navigator.mediaDevices.getUserMedia({
           video: {
-            facingMode: "user",
+            facingMode: cameraFacingMode,
             width: { ideal: 1280 },
             height: { ideal: 720 },
           },
@@ -177,6 +196,12 @@ function CameraCapture({
         if (mounted && videoRef.current) {
           streamRef.current = stream;
           videoRef.current.srcObject = stream;
+          try {
+            await videoRef.current.play();
+            setIsStreaming(true);
+          } catch {
+            // Some devices delay playback until the element is fully ready.
+          }
         } else {
           stream.getTracks().forEach((track) => track.stop());
         }
@@ -194,7 +219,7 @@ function CameraCapture({
       mounted = false;
       stopCamera();
     };
-  }, [stopCamera]);
+  }, [stopCamera, cameraFacingMode]);
 
   const isCapturing = useRef(false);
 
@@ -260,8 +285,10 @@ function CameraCapture({
                 playsInline
                 muted
                 onLoadedMetadata={handleVideoReady}
+                onCanPlay={handleVideoReady}
+                onPlaying={handleVideoReady}
                 className="w-full h-full object-cover"
-                style={{ transform: "scaleX(-1)" }}
+                style={{ transform: isFrontCamera ? "scaleX(-1)" : "none" }}
               />
 
               {/* AR Canvas Overlay */}
@@ -274,7 +301,7 @@ function CameraCapture({
                     selectedProp={selectedProp}
                     propScale={1.5} // Auto-scale modifier if needed, or rely on internal logic
                     customColors={customColors}
-                    mirrored={true}
+                    mirrored={isFrontCamera}
                   />
                 </>
               )}
@@ -306,12 +333,10 @@ function CameraCapture({
                 <button
                   type="button"
                   onClick={() => setShowARMenu(false)}
-                  className="absolute inset-0 z-10 flex items-start justify-center bg-black/35 pt-3 backdrop-blur-[1.5px] sm:hidden"
+                  className="absolute left-1/2 top-3 z-30 -translate-x-1/2 rounded-full border border-[#00CED1]/60 bg-[rgba(13,27,42,0.88)] px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-[#00CED1] sm:hidden"
                   aria-label="Close AR effects panel"
                 >
-                  <span className="rounded-full border border-[#00CED1]/60 bg-[rgba(13,27,42,0.85)] px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-[#00CED1]">
-                    AR Effects Open
-                  </span>
+                  Close Effects
                 </button>
               )}
 
@@ -421,6 +446,14 @@ function CameraCapture({
             className="w-full rounded-full bg-[#FF6B35] px-4 py-3 text-sm font-medium text-white transition hover:bg-[#e55a2b] disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto sm:px-8 sm:text-base"
           >
             Instant Capture
+          </button>
+
+          <button
+            onClick={toggleCameraFacingMode}
+            disabled={countdown !== null}
+            className="flex w-full items-center justify-center gap-2 rounded-full border border-[rgba(0,206,209,0.45)] bg-[rgba(13,27,42,0.8)] px-4 py-3 text-sm font-medium text-[#00CED1] transition hover:border-[#00CED1] hover:bg-[rgba(13,27,42,0.95)] disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto sm:px-6 sm:text-base"
+          >
+            {isFrontCamera ? "Back Cam" : "Front Cam"}
           </button>
 
           {/* New AR Effects Button */}

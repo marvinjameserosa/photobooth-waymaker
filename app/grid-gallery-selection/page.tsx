@@ -122,19 +122,29 @@ function CameraCaptureModal({
   const [isStreaming, setIsStreaming] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [countdown, setCountdown] = useState<number | null>(null);
+  const [cameraFacingMode, setCameraFacingMode] = useState<
+    "user" | "environment"
+  >("user");
+  const isFrontCamera = cameraFacingMode === "user";
 
   const stopCamera = useCallback(() => {
     if (streamRef.current) {
       streamRef.current.getTracks().forEach((track) => track.stop());
       streamRef.current = null;
     }
+    setIsStreaming(false);
+  }, []);
+
+  const handleVideoReady = useCallback(() => {
+    setIsStreaming(true);
+    setError(null);
   }, []);
 
   const startCamera = useCallback(async () => {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({
         video: {
-          facingMode: "user",
+          facingMode: cameraFacingMode,
           width: { ideal: 1280 },
           height: { ideal: 720 },
         },
@@ -144,13 +154,19 @@ function CameraCaptureModal({
       if (videoRef.current) {
         streamRef.current = stream;
         videoRef.current.srcObject = stream;
+        try {
+          await videoRef.current.play();
+          setIsStreaming(true);
+        } catch {
+          // Fallback to video readiness events where autoplay is delayed.
+        }
       }
       setError(null);
     } catch (err) {
       setError("Unable to access camera. Please allow camera permissions.");
       console.error("Camera error:", err);
     }
-  }, []);
+  }, [cameraFacingMode]);
 
   useEffect(() => {
     startCamera();
@@ -168,13 +184,21 @@ function CameraCaptureModal({
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
 
-    ctx.translate(canvas.width, 0);
-    ctx.scale(-1, 1);
+    if (isFrontCamera) {
+      ctx.translate(canvas.width, 0);
+      ctx.scale(-1, 1);
+    }
     ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
 
     const imageData = canvas.toDataURL("image/jpeg", 0.9);
     onCapture(imageData);
-  }, [onCapture]);
+  }, [onCapture, isFrontCamera]);
+
+  const toggleCameraFacingMode = useCallback(() => {
+    setCameraFacingMode((prev) => (prev === "user" ? "environment" : "user"));
+    setIsStreaming(false);
+    setError(null);
+  }, []);
 
   useEffect(() => {
     if (countdown === null) return;
@@ -227,9 +251,11 @@ function CameraCaptureModal({
                 autoPlay
                 playsInline
                 muted
-                onLoadedMetadata={() => setIsStreaming(true)}
+                onLoadedMetadata={handleVideoReady}
+                onCanPlay={handleVideoReady}
+                onPlaying={handleVideoReady}
                 className="h-full w-full object-cover"
-                style={{ transform: "scaleX(-1)" }}
+                style={{ transform: isFrontCamera ? "scaleX(-1)" : "none" }}
               />
 
               {countdown !== null && (
@@ -258,6 +284,14 @@ function CameraCaptureModal({
             className="w-full rounded-full bg-[#FF6B35] px-4 py-3 text-sm font-medium text-white transition hover:bg-[#e55a2b] disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto sm:px-8 sm:text-base"
           >
             Instant Capture
+          </button>
+
+          <button
+            onClick={toggleCameraFacingMode}
+            disabled={countdown !== null}
+            className="w-full rounded-full border border-[rgba(0,206,209,0.45)] bg-[rgba(13,27,42,0.8)] px-4 py-3 text-sm font-medium text-[#00CED1] transition hover:border-[#00CED1] hover:bg-[rgba(13,27,42,0.95)] disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto sm:px-6 sm:text-base"
+          >
+            {isFrontCamera ? "Back Cam" : "Front Cam"}
           </button>
         </div>
 
