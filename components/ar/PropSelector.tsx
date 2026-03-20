@@ -17,6 +17,48 @@ const categories: { id: PropCategory; label: string; icon: string }[] = [
   { id: "effects", label: "Effects", icon: "✨" },
 ];
 
+function getPropIcon(prop: ARProp): string {
+  if (prop.category === "sunglasses") {
+    return "🕶️";
+  }
+
+  if (prop.category === "logos") {
+    return "🏷️";
+  }
+
+  if (prop.category === "hats") {
+    if (prop.id.includes("robot-helmet")) {
+      return "🤖";
+    }
+    if (prop.id.includes("arduino-cap")) {
+      return "🧢";
+    }
+    return "🎩";
+  }
+
+  if (prop.category === "components") {
+    if (prop.id.includes("resistor")) {
+      return "🔌";
+    }
+    if (prop.id.includes("servo")) {
+      return "⚙️";
+    }
+    return "⚡";
+  }
+
+  if (prop.category === "effects") {
+    if (prop.id.includes("binary")) {
+      return "🔢";
+    }
+    if (prop.id.includes("cloud")) {
+      return "☁️";
+    }
+    return "✨";
+  }
+
+  return "✨";
+}
+
 export default function PropSelector({
   onSelectProp,
   selectedProp,
@@ -82,27 +124,7 @@ export default function PropSelector({
             `}
           >
             {/* Prop preview (simplified icon) */}
-            <div className="text-2xl">
-              {prop.category === "sunglasses" && "🕶️"}
-              {prop.category === "logos" && "🏷️"}
-              {prop.category === "hats" &&
-                prop.id.includes("robot-helmet") &&
-                "🤖"}
-              {prop.category === "hats" &&
-                prop.id.includes("arduino-cap") &&
-                "🧢"}
-              {prop.category === "components" &&
-                prop.id.includes("resistor") &&
-                "🔌"}
-              {prop.category === "components" &&
-                prop.id.includes("servo") &&
-                "⚙️"}
-              {prop.category === "effects" &&
-                prop.id.includes("binary") &&
-                "🔢"}
-              {prop.category === "effects" && prop.id.includes("cloud") && "☁️"}
-              {prop.category === "effects" && prop.id.includes("debug") && "✨"}
-            </div>
+            <div className="text-2xl">{getPropIcon(prop)}</div>
             <span className="text-xs text-gray-300 text-center leading-tight">
               {prop.name}
             </span>

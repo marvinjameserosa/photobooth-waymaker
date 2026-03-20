@@ -13,8 +13,69 @@ interface ARImageAsset {
   offsetYMultiplier: number;
 }
 
+type ARImageAssetOverride = Partial<Omit<ARImageAsset, "file" | "id" | "name">>;
+
 const IMAGE_PROPS_DIR = "/ar-props/props";
 const IMAGE_FILE_REGEX = /\.(png|jpg|jpeg|webp)$/i;
+
+const FILE_OVERRIDES: Record<string, ARImageAssetOverride> = {
+  sunglasses: {
+    category: "sunglasses",
+    anchorPoints: [33, 133, 362, 263],
+    defaultScale: 1,
+    maxWidthMultiplier: 1.7,
+    maxHeightMultiplier: 1,
+    offsetYMultiplier: 0,
+  },
+  "logo-2": {
+    category: "logos",
+    anchorPoints: [10, 338, 109],
+    defaultScale: 1.2,
+    maxWidthMultiplier: 1.9,
+    maxHeightMultiplier: 1.2,
+    offsetYMultiplier: 0.92,
+  },
+  callout: {
+    category: "logos",
+    anchorPoints: [10, 338, 109],
+    defaultScale: 1.35,
+    maxWidthMultiplier: 1.8,
+    maxHeightMultiplier: 1.35,
+    offsetYMultiplier: 0.82,
+  },
+  cap: {
+    category: "hats",
+    anchorPoints: [10, 338, 109],
+    defaultScale: 1.9,
+    maxWidthMultiplier: 2.45,
+    maxHeightMultiplier: 1.95,
+    offsetYMultiplier: 0.66,
+  },
+  hat: {
+    category: "hats",
+    anchorPoints: [10, 338, 109],
+    defaultScale: 1.85,
+    maxWidthMultiplier: 2.35,
+    maxHeightMultiplier: 1.95,
+    offsetYMultiplier: 0.62,
+  },
+  "hat-3": {
+    category: "hats",
+    anchorPoints: [10, 338, 109],
+    defaultScale: 1.85,
+    maxWidthMultiplier: 2.4,
+    maxHeightMultiplier: 1.95,
+    offsetYMultiplier: 0.64,
+  },
+  headband: {
+    category: "hats",
+    anchorPoints: [10, 338, 109],
+    defaultScale: 1.45,
+    maxWidthMultiplier: 2.2,
+    maxHeightMultiplier: 1.6,
+    offsetYMultiplier: 0.35,
+  },
+};
 
 function toSlug(value: string): string {
   return value
@@ -91,9 +152,9 @@ function classifyAsset(
   return {
     category: "hats",
     anchorPoints: [10, 338, 109],
-    defaultScale: 1.5,
-    maxWidthMultiplier: 1.9,
-    maxHeightMultiplier: 1.6,
+    defaultScale: 1.85,
+    maxWidthMultiplier: 2.3,
+    maxHeightMultiplier: 1.95,
     offsetYMultiplier: 0.65,
   };
 }
@@ -101,7 +162,11 @@ function classifyAsset(
 function fileToAsset(file: string): ARImageAsset {
   const baseName = file.replace(IMAGE_FILE_REGEX, "");
   const slug = toSlug(baseName);
-  const classified = classifyAsset(file);
+  const baseNameKey = baseName.toLowerCase();
+  const classified = {
+    ...classifyAsset(file),
+    ...(FILE_OVERRIDES[baseNameKey] ?? {}),
+  };
 
   return {
     file,
@@ -143,7 +208,12 @@ export function createARPropsFromFiles(files: string[]): ARProp[] {
     }));
 }
 
-const FALLBACK_PROP_FILES = ["logo.png", "sunglasses.png"];
+const FALLBACK_PROP_FILES = [
+  "sunglasses.png",
+  "cap.png",
+  "hat.png",
+  "logo-2.png",
+];
 
 /**
  * Local fallback while dynamic list is still loading.
