@@ -45,9 +45,11 @@ function StationBadge({ children }: { children: React.ReactNode }) {
 function CameraCapture({
   onCapture,
   onClose,
+  remainingSlots = 1,
 }: {
-  onCapture: (imageData: string) => void;
+  onCapture: (imageData: string, closeCamera?: boolean) => void;
   onClose: () => void;
+  remainingSlots?: number;
 }) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -57,6 +59,7 @@ function CameraCapture({
   const [error, setError] = useState<string | null>(null);
   const [needsUserStart, setNeedsUserStart] = useState(false);
   const [countdown, setCountdown] = useState<number | null>(null);
+  const [continuousCount, setContinuousCount] = useState<number | null>(null);
   const [cameraFacingMode, setCameraFacingMode] = useState<
     "user" | "environment"
   >("user");
@@ -160,7 +163,7 @@ function CameraCapture({
     setNeedsUserStart(false);
   }, []);
 
-  const capturePhoto = useCallback(() => {
+  const capturePhoto = useCallback((continuous = false) => {
     if (videoRef.current && canvasRef.current) {
       const video = videoRef.current;
       const canvas = canvasRef.current;
@@ -203,7 +206,7 @@ function CameraCapture({
         }
 
         const imageData = canvas.toDataURL("image/jpeg", 0.9);
-        onCapture(imageData);
+        onCapture(imageData, !continuous);
       }
     }
   }, [onCapture, isAREnabled, selectedProp, predictions, isFrontCamera]);
@@ -269,10 +272,22 @@ function CameraCapture({
     if (countdown === 0) {
       if (!isCapturing.current) {
         isCapturing.current = true;
-        capturePhoto();
+
+        const isContinuous = continuousCount !== null && continuousCount > 1;
+        capturePhoto(isContinuous);
+
+        if (isContinuous) {
+          setContinuousCount((prev) => (prev !== null ? prev - 1 : null));
+          setTimeout(() => {
+            setCountdown(3);
+            isCapturing.current = false;
+          }, 1000); // 1-second delay before next countdown starts so user registers flash
+        } else {
+          setContinuousCount(null);
+          setCountdown(null);
+          isCapturing.current = false;
+        }
       }
-      setCountdown(null);
-      isCapturing.current = false;
       return;
     }
 
@@ -281,11 +296,20 @@ function CameraCapture({
     }, 1000);
 
     return () => clearTimeout(timer);
-  }, [countdown, capturePhoto]);
+  }, [countdown, capturePhoto, continuousCount]);
 
   const startCountdown = () => {
     isCapturing.current = false;
+    setContinuousCount(null);
     setCountdown(3);
+  };
+
+  const startContinuousShot = () => {
+    if (remainingSlots > 0) {
+      isCapturing.current = false;
+      setContinuousCount(remainingSlots);
+      setCountdown(3);
+    }
   };
 
   return (
@@ -473,19 +497,29 @@ function CameraCapture({
         </div>
 
         {/* Controls */}
-        <div className="flex w-full flex-col items-stretch justify-center gap-3 border-t border-[rgba(0,206,209,0.2)] bg-[rgba(13,27,42,0.5)] p-4 sm:flex-row sm:items-center sm:gap-4 sm:p-6">
+        <div className="flex w-full flex-col items-stretch justify-center gap-3 border-t border-[rgba(0,206,209,0.2)] bg-[rgba(13,27,42,0.5)] p-4 sm:flex-row sm:items-center sm:gap-4 sm:p-6 lg:flex-wrap">
           <button
-            onClick={startCountdown}
+            onClick={startContinuousShot}
             disabled={!isStreaming || countdown !== null}
-            className="w-full rounded-full bg-[#00CED1] px-4 py-3 text-sm font-medium text-white shadow-[0_0_20px_rgba(0,206,209,0.3)] transition hover:bg-[#00b8ba] disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto sm:px-8 sm:text-base"
+            className="w-full rounded-full bg-purple-600 px-4 py-3 text-[13px] font-medium text-white shadow-[0_0_20px_rgba(147,51,234,0.3)] transition hover:bg-purple-500 disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto sm:px-6 sm:text-sm"
           >
-            {countdown !== null ? "Taking Photo..." : "Take Photo (3s timer)"}
+            {continuousCount !== null
+              ? `Burst (${continuousCount} left)`
+              : "Continuous Shot"}
           </button>
 
           <button
-            onClick={capturePhoto}
+            onClick={startCountdown}
+            disabled={!isStreaming || countdown !== null}
+            className="w-full rounded-full bg-[#00CED1] px-4 py-3 text-[13px] font-medium text-white shadow-[0_0_20px_rgba(0,206,209,0.3)] transition hover:bg-[#00b8ba] disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto sm:px-6 sm:text-sm"
+          >
+            {countdown !== null && continuousCount === null ? "Taking Photo..." : "Take Photo (3s)"}
+          </button>
+
+          <button
+            onClick={() => capturePhoto(false)}
             disabled={!isStreaming}
-            className="w-full rounded-full bg-[#FF6B35] px-4 py-3 text-sm font-medium text-white transition hover:bg-[#e55a2b] disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto sm:px-8 sm:text-base"
+            className="w-full rounded-full bg-[#FF6B35] px-4 py-3 text-[13px] font-medium text-white transition hover:bg-[#e55a2b] disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto sm:px-6 sm:text-sm"
           >
             Instant Capture
           </button>
@@ -493,7 +527,7 @@ function CameraCapture({
           <button
             onClick={toggleCameraFacingMode}
             disabled={countdown !== null}
-            className="flex w-full items-center justify-center gap-2 rounded-full border border-[rgba(0,206,209,0.45)] bg-[rgba(13,27,42,0.8)] px-4 py-3 text-sm font-medium text-[#00CED1] transition hover:border-[#00CED1] hover:bg-[rgba(13,27,42,0.95)] disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto sm:px-6 sm:text-base"
+            className="flex w-full items-center justify-center gap-2 rounded-full border border-[rgba(0,206,209,0.45)] bg-[rgba(13,27,42,0.8)] px-4 py-3 text-[13px] font-medium text-[#00CED1] transition hover:border-[#00CED1] hover:bg-[rgba(13,27,42,0.95)] disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto sm:px-4 sm:text-sm"
           >
             {isFrontCamera ? "Back Cam" : "Front Cam"}
           </button>
@@ -502,7 +536,7 @@ function CameraCapture({
           <button
             onClick={() => setShowARMenu(!showARMenu)}
             disabled={!isStreaming}
-            className={`flex w-full items-center justify-center gap-2 rounded-full px-4 py-3 text-sm font-medium transition sm:w-auto sm:px-6 sm:text-base ${
+            className={`flex w-full items-center justify-center gap-2 rounded-full px-4 py-3 text-[13px] font-medium transition sm:w-auto sm:px-4 sm:text-sm ${
               showARMenu || (isAREnabled && selectedProp)
                 ? "bg-purple-600 text-white shadow-[0_0_15px_rgba(147,51,234,0.5)]"
                 : "bg-[rgba(255,255,255,0.1)] text-white hover:bg-[rgba(255,255,255,0.2)]"
@@ -604,7 +638,7 @@ function CapturePhotosContent() {
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const handleCameraCapture = (imageData: string) => {
+  const handleCameraCapture = (imageData: string, closeCamera = true) => {
     setPhotos((prev) => {
       const newPhotos = [...prev];
       const emptyIndex = newPhotos.findIndex((p) => p === null);
@@ -612,7 +646,9 @@ function CapturePhotosContent() {
       newPhotos[targetIndex] = imageData;
       return newPhotos;
     });
-    setShowCamera(false);
+    if (closeCamera) {
+      setShowCamera(false);
+    }
   };
 
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -859,6 +895,7 @@ function CapturePhotosContent() {
         <CameraCapture
           onCapture={handleCameraCapture}
           onClose={() => setShowCamera(false)}
+          remainingSlots={activeConfig.size - capturedCount}
         />
       )}
     </div>

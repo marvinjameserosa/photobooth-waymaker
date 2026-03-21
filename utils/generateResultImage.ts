@@ -31,11 +31,11 @@ export async function generateResultImage({
   const accentColor = "#00CED1";
 
   // Theme Overrides
-  if (theme === "elevator") {
+  if (theme === "elevator" || theme === "default" || theme === "subway" || theme === "terminal") {
     // Load template
     const templateImg = new window.Image();
     templateImg.crossOrigin = "anonymous";
-    templateImg.src = "/template/elevator.png";
+    templateImg.src = "/template/template.png";
 
     try {
       await new Promise<void>((resolve, reject) => {
@@ -50,22 +50,22 @@ export async function generateResultImage({
       // Draw template
       ctx.drawImage(templateImg, 0, 0);
 
-      // Slot coordinates in template space, scaled to actual image size.
-      const slotLeft = canvas.width * 0.16;
-      const slotWidthTotal = canvas.width * 0.62;
-      const horizontalGap = canvas.width * 0.05;
-      const slotWidth = (slotWidthTotal - horizontalGap) / 2;
-      const firstSlotTop = canvas.height * 0.14;
-      const slotHeight = canvas.height * 0.36;
-      const slotGap = canvas.height * 0.1;
+      const slotLeftPct = 0.20;
+      const slotWidthTotalPct = 0.62;
+      const horizontalGapPct = 0.01;
+      const slotWidthPct = (slotWidthTotalPct - horizontalGapPct) / 2;
+      const firstSlotTopPct = 0.15;
+      const slotHeightPct = 0.36;
+      const slotGapPct = 0.02;
 
       for (let i = 0; i < 4; i++) {
-        const x = slotLeft;
-        const y = firstSlotTop + i * (slotHeight + slotGap);
-        const innerX = x;
-        const innerY = y;
-        const innerWidth = slotWidth;
-        const innerHeight = slotHeight;
+        const row = Math.floor(i / 2);
+        const col = i % 2;
+        
+        const innerX = canvas.width * (slotLeftPct + col * (slotWidthPct + horizontalGapPct));
+        const innerY = canvas.height * (firstSlotTopPct + row * (slotHeightPct + slotGapPct));
+        const innerWidth = canvas.width * slotWidthPct;
+        const innerHeight = canvas.height * slotHeightPct;
 
         // Draw photo
         if (photos[i]) {
