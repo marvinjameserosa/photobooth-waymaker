@@ -63,11 +63,12 @@ function ResultsPreview({
   const title = config?.title || "SUBWAY 1";
   const isElevator = title.trim().toUpperCase() === "ELEVATOR";
   const elevatorSlotLayout = {
-    leftPct: 10,
-    widthPct: 80,
-    topPct: 11.8,
-    slotHeightPct: 15.2,
-    gapPct: 3.72,
+    leftPct: 20, // match generateResultImage
+    widthPct: 62,
+    topPct: 15,
+    slotHeightPct: 36,
+    gapPct: 2,
+    horizontalGapPct: 1,
   };
 
   const grid = (
@@ -85,7 +86,7 @@ function ResultsPreview({
             <img
               src={photos[index]!}
               alt={`Photo ${index + 1}`}
-              className="w-full h-full object-cover"
+              className="w-full h-full object-contain object-center"
             />
           ) : (
             <div className="absolute inset-0 flex items-center justify-center px-6 text-center">
@@ -103,27 +104,36 @@ function ResultsPreview({
   );
 
   const elevatorTemplate = (
-    <div className="relative w-full max-w-[340px] aspect-600/1800 mx-auto overflow-hidden rounded-md shadow-[0_18px_50px_rgba(0,0,0,0.35)]">
+    <div className="relative w-full max-w-6xl aspect-[16/9] mx-auto overflow-hidden rounded-md shadow-[0_18px_50px_rgba(0,0,0,0.35)]">
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
-        src="/template/elevator.png"
-        alt="Elevator template"
-        className="absolute inset-0 w-full h-full object-cover"
+        src="/template/template.png"
+        alt="Template"
+        className="absolute inset-0 w-full h-full object-contain"
       />
       <div className="absolute inset-0 z-10">
         {Array.from({ length: 4 }).map((_, index) => {
+          const row = Math.floor(index / 2);
+          const col = index % 2;
+          const slotWidth =
+            (elevatorSlotLayout.widthPct -
+              elevatorSlotLayout.horizontalGapPct) /
+            2;
           const slotTop =
             elevatorSlotLayout.topPct +
-            index *
+            row *
               (elevatorSlotLayout.slotHeightPct + elevatorSlotLayout.gapPct);
+          const slotLeft =
+            elevatorSlotLayout.leftPct +
+            col * (slotWidth + elevatorSlotLayout.horizontalGapPct);
 
           return (
             <div
               key={index}
-              className="absolute overflow-hidden bg-white/20"
+              className="absolute overflow-hidden"
               style={{
-                left: `${elevatorSlotLayout.leftPct}%`,
-                width: `${elevatorSlotLayout.widthPct}%`,
+                left: `${slotLeft}%`,
+                width: `${slotWidth}%`,
                 top: `${slotTop}%`,
                 height: `${elevatorSlotLayout.slotHeightPct}%`,
               }}
@@ -133,7 +143,7 @@ function ResultsPreview({
                 <img
                   src={photos[index]!}
                   alt={`Photo ${index + 1}`}
-                  className="w-full h-full object-cover"
+                  className="absolute inset-0 w-full h-full object-cover object-center"
                 />
               ) : (
                 <div className="absolute inset-0 flex items-center justify-center text-center">
@@ -152,12 +162,14 @@ function ResultsPreview({
   return (
     <div
       ref={previewRef}
-      className="w-full bg-[rgba(13,27,42,0.55)] border border-[rgba(0,206,209,0.2)] px-4 py-6 rounded-xl backdrop-blur-sm shadow-[0_40px_100px_rgba(0,0,0,0.55)]"
+      className="w-full bg-[rgba(13,27,42,0.55)] border border-[rgba(0,206,209,0.2)] px-2 sm:px-4 py-4 sm:py-6 rounded-xl backdrop-blur-sm shadow-[0_40px_100px_rgba(0,0,0,0.55)] flex flex-col items-center max-w-6xl mx-auto"
     >
       <div className="text-center text-[10px] uppercase tracking-[0.26em] text-[#00CED1] mb-4">
         {dateLabel}
       </div>
-      {isElevator ? elevatorTemplate : grid}
+      <div className="w-full flex justify-center">
+        {isElevator ? elevatorTemplate : grid}
+      </div>
     </div>
   );
 }
@@ -192,7 +204,7 @@ export default function GridResultsPage() {
           ? "terminal"
           : "default";
 
-  const previewWidthClass = "max-w-md";
+  const previewWidthClass = "max-w-6xl";
 
   const handleDownload = async () => {
     try {

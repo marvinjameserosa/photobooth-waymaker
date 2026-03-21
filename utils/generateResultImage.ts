@@ -50,12 +50,14 @@ export async function generateResultImage({
       // Draw template
       ctx.drawImage(templateImg, 0, 0);
 
-      // Slot coordinates in template space (600x1800), scaled to actual image size.
-      const slotLeft = canvas.width * 0.1;
-      const slotWidth = canvas.width * 0.8;
-      const firstSlotTop = canvas.height * 0.118;
-      const slotHeight = canvas.height * 0.152;
-      const slotGap = canvas.height * 0.0372;
+      // Slot coordinates in template space, scaled to actual image size.
+      const slotLeft = canvas.width * 0.16;
+      const slotWidthTotal = canvas.width * 0.62;
+      const horizontalGap = canvas.width * 0.05;
+      const slotWidth = (slotWidthTotal - horizontalGap) / 2;
+      const firstSlotTop = canvas.height * 0.14;
+      const slotHeight = canvas.height * 0.36;
+      const slotGap = canvas.height * 0.1;
 
       for (let i = 0; i < 4; i++) {
         const x = slotLeft;
