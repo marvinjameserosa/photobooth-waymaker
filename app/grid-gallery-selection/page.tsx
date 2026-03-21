@@ -112,9 +112,11 @@ function Polaroid({ photo }: { photo: PhotoCard }) {
 function CameraCaptureModal({
   onCapture,
   onClose,
+  remainingSlots = 1,
 }: {
-  onCapture: (imageData: string) => void;
+  onCapture: (imageData: string, closeCamera?: boolean) => void;
   onClose: () => void;
+  remainingSlots?: number;
 }) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -123,6 +125,7 @@ function CameraCaptureModal({
   const [error, setError] = useState<string | null>(null);
   const [needsUserStart, setNeedsUserStart] = useState(false);
   const [countdown, setCountdown] = useState<number | null>(null);
+  const [continuousCount, setContinuousCount] = useState<number | null>(null);
   const [cameraFacingMode, setCameraFacingMode] = useState<
     "user" | "environment"
   >("user");
@@ -208,7 +211,7 @@ function CameraCaptureModal({
     return () => stopCamera();
   }, [startCamera, stopCamera]);
 
-  const capturePhoto = useCallback(() => {
+  const capturePhoto = useCallback((continuous = false) => {
     if (!videoRef.current || !canvasRef.current) return;
 
     const video = videoRef.current;
@@ -226,7 +229,7 @@ function CameraCaptureModal({
     ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
 
     const imageData = canvas.toDataURL("image/jpeg", 0.9);
-    onCapture(imageData);
+    onCapture(imageData, !continuous);
   }, [onCapture, isFrontCamera]);
 
   const toggleCameraFacingMode = useCallback(() => {
@@ -235,12 +238,30 @@ function CameraCaptureModal({
     setError(null);
   }, []);
 
+  const isCapturing = useRef(false);
+
   useEffect(() => {
     if (countdown === null) return;
 
     if (countdown === 0) {
-      capturePhoto();
-      setCountdown(null);
+      if (!isCapturing.current) {
+        isCapturing.current = true;
+
+        const isContinuous = continuousCount !== null && continuousCount > 1;
+        capturePhoto(isContinuous);
+
+        if (isContinuous) {
+          setContinuousCount((prev) => (prev !== null ? prev - 1 : null));
+          window.setTimeout(() => {
+            setCountdown(3);
+            isCapturing.current = false;
+          }, 1000); // 1-second delay before next countdown starts so user registers flash
+        } else {
+          setContinuousCount(null);
+          setCountdown(null);
+          isCapturing.current = false;
+        }
+      }
       return;
     }
 
@@ -249,7 +270,15 @@ function CameraCaptureModal({
     }, 1000);
 
     return () => window.clearTimeout(timer);
-  }, [countdown, capturePhoto]);
+  }, [countdown, capturePhoto, continuousCount]);
+
+  const startContinuousShot = () => {
+    if (remainingSlots > 0) {
+      isCapturing.current = false;
+      setContinuousCount(remainingSlots);
+      setCountdown(3);
+    }
+  };
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 p-2 sm:p-4">
@@ -316,19 +345,33 @@ function CameraCaptureModal({
           )}
         </div>
 
-        <div className="flex w-full flex-col items-stretch justify-center gap-3 border-t border-[rgba(0,206,209,0.2)] bg-[rgba(13,27,42,0.5)] p-4 sm:flex-row sm:items-center sm:gap-4 sm:p-6">
+        <div className="flex w-full flex-col items-stretch justify-center gap-3 border-t border-[rgba(0,206,209,0.2)] bg-[rgba(13,27,42,0.5)] p-4 sm:flex-row sm:items-center sm:gap-4 sm:p-6 lg:flex-wrap">
           <button
-            onClick={() => setCountdown(3)}
+            onClick={startContinuousShot}
             disabled={!isStreaming || countdown !== null}
-            className="w-full rounded-full bg-[#00CED1] px-4 py-3 text-sm font-medium text-white shadow-[0_0_20px_rgba(0,206,209,0.3)] transition hover:bg-[#00b8ba] disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto sm:px-8 sm:text-base"
+            className="w-full rounded-full bg-purple-600 px-4 py-3 text-[13px] font-medium text-white shadow-[0_0_20px_rgba(147,51,234,0.3)] transition hover:bg-purple-500 disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto sm:px-6 sm:text-sm"
           >
-            {countdown !== null ? "Taking Photo..." : "Take Photo (3s timer)"}
+            {continuousCount !== null
+              ? `Burst (${continuousCount} left)`
+              : "Continuous Shot"}
           </button>
 
           <button
-            onClick={capturePhoto}
+            onClick={() => {
+              isCapturing.current = false;
+              setContinuousCount(null);
+              setCountdown(3);
+            }}
+            disabled={!isStreaming || countdown !== null}
+            className="w-full rounded-full bg-[#00CED1] px-4 py-3 text-[13px] font-medium text-white shadow-[0_0_20px_rgba(0,206,209,0.3)] transition hover:bg-[#00b8ba] disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto sm:px-6 sm:text-sm"
+          >
+            {countdown !== null && continuousCount === null ? "Taking Photo..." : "Take Photo (3s)"}
+          </button>
+
+          <button
+            onClick={() => capturePhoto(false)}
             disabled={!isStreaming}
-            className="w-full rounded-full bg-[#FF6B35] px-4 py-3 text-sm font-medium text-white transition hover:bg-[#e55a2b] disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto sm:px-8 sm:text-base"
+            className="w-full rounded-full bg-[#FF6B35] px-4 py-3 text-[13px] font-medium text-white transition hover:bg-[#e55a2b] disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto sm:px-6 sm:text-sm"
           >
             Instant Capture
           </button>
@@ -438,18 +481,34 @@ export default function SubwayGallery() {
     setShowCameraModal(true);
   };
 
-  const handleCameraCapture = (imageData: string) => {
-    if (replaceIndex === null) return;
+  const handleCameraCapture = (imageData: string, closeCamera = true) => {
+    let nextIndex = replaceIndex;
 
     setPhotos((prev) => {
       const next = [...prev];
-      next[replaceIndex] = imageData;
+      if (nextIndex !== null) {
+        next[nextIndex] = imageData;
+        // Move to next empty slot or next slot for continuous
+        if (!closeCamera) {
+          const emptyIndex = next.findIndex((p, i) => p === null && i > nextIndex!);
+          if (emptyIndex !== -1) {
+            nextIndex = emptyIndex;
+          } else {
+            const anyEmpty = next.findIndex(p => p === null);
+            if (anyEmpty !== -1) nextIndex = anyEmpty;
+            else nextIndex = (nextIndex! + 1) % config!.size;
+          }
+          setReplaceIndex(nextIndex);
+        }
+      }
       sessionStorage.setItem("photobooth_photos", JSON.stringify(next));
       return next;
     });
 
-    setShowCameraModal(false);
-    setReplaceIndex(null);
+    if (closeCamera) {
+      setShowCameraModal(false);
+      setReplaceIndex(null);
+    }
   };
 
   const handleReplacePhoto = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -521,6 +580,7 @@ export default function SubwayGallery() {
               setShowCameraModal(false);
               setReplaceIndex(null);
             }}
+            remainingSlots={Math.max(1, photos.filter(p => !p).length || config?.size || 1)}
           />
         )}
 
